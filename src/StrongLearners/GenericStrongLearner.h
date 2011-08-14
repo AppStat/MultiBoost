@@ -8,7 +8,7 @@ $Revision: 1.7 $
 *
 *    MultiBoost - Multi-purpose boosting package
 *
-*    Copyright (C) 2010   AppStat group
+*    Copyright (C)        AppStat group
 *                         Laboratoire de l'Accelerateur Lineaire
 *                         Universite Paris-Sud, 11, CNRS
 *
@@ -16,8 +16,8 @@ $Revision: 1.7 $
 *
 *    This library is free software; you can redistribute it 
 *    and/or modify it under the terms of the GNU General Public
-*    License as published by the Free Software Foundation; either
-*    version 2.1 of the License, or (at your option) any later version.
+*    License as published by the Free Software Foundation
+*    version 2.1 of the License.
 *
 *    This library is distributed in the hope that it will be useful,
 *    but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -28,9 +28,7 @@ $Revision: 1.7 $
 *    License along with this library; if not, write to the Free Software
 *    Foundation, Inc., 51 Franklin St, 5th Floor, Boston, MA 02110-1301 USA
 *
-*    Contact: Balazs Kegl (balazs.kegl@gmail.com)
-*             Norman Casagrande (nova77@gmail.com)
-*             Robert Busa-Fekete (busarobi@gmail.com)
+*    Contact: : multiboost@googlegroups.com
 *
 *    For more information and up-to-date version, please visit
 *        

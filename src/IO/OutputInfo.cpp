@@ -23,6 +23,7 @@
  *    Foundation, Inc., 51 Franklin St, 5th Floor, Boston, MA 02110-1301 USA
  *
  *    Contact: multiboost@googlegroups.com 
+ * 
  *    For more information and up-to-date version, please visit
  *        
  *                       http://www.multiboost.org/
@@ -102,7 +103,7 @@ namespace MultiBoost {
             string outList;
             args.getValue(clArg, 1, outList);
             
-            getOutputListFromString(outList);
+            getOutputListFromString(outList, &args);
         }
         else
         {
@@ -169,7 +170,9 @@ namespace MultiBoost {
             for (outputIt = _outputList.begin(); outputIt != _outputList.end(); ++outputIt) {
                 (*outputIt)->outputHeader(_outStream, namemap);
                 _outStream << OUTPUT_SEPARATOR;
-                _outStream << HEADER_FIELD_LENGTH;
+                
+                if (outputIt+1 != _outputList.end())
+                    _outStream << HEADER_FIELD_LENGTH;
             }
             if (i != numDatasets - 1) {
 //                _outStream << HEADER_FIELD_LENGTH;

@@ -43,8 +43,7 @@
  * Further base learners and strong learners following the boosting paradigm can be easily implemented in a flexible framework.
  * Feel free to use it and to modify it!
  *
- * Copyright (C) 2005 Djalel Benbouzid, Robert Busa-Fekete, Norman Casagrande,
- Francois-David Collin, Balazs Kegl.
+ * Copyright (C) 2005 Djalel Benbouzid, Robert Busa-Fekete, Norman Casagrande, Francois-David Collin, Balazs Kegl.
  * This software is covered by the 
  * <a href="http://www.gnu.org/copyleft/lesser.html">LGPL</a> licence.
  *
@@ -160,7 +159,7 @@ using namespace std;
 using namespace MultiBoost;
 
 
-static const char CURRENT_VERSION[] = "1.1";
+static const char CURRENT_VERSION[] = "1.1.02";
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -191,9 +190,9 @@ void checkBaseLearner(const string& baseLearnerName)
  */
 void showBase()
 {
-	cout << "MultiBoost (v" << CURRENT_VERSION << "). An obvious name for a multi-class AdaBoost learner." << endl;
+	cout << "MultiBoost (v" << CURRENT_VERSION << "). A multi-purpose, multi-class boosting package." << endl;
 	cout << "---------------------------------------------------------------------------" << endl;
-	cout << "Build: " << __DATE__ << " (" << __TIME__ << ") (C) Robert Busa-Fekete, Balazs Kegl, Norman Casagrande 2005-2010" << endl << endl;
+	cout << "Build: " << __DATE__ << " (" << __TIME__ << ") (C) multiboost.org" << endl << endl;
 	cout << "===> Type --help for help or --static to show the static options" << endl;
 	
 	exit(0);

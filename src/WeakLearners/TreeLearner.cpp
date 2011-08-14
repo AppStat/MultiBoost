@@ -23,6 +23,7 @@
  *    Foundation, Inc., 51 Franklin St, 5th Floor, Boston, MA 02110-1301 USA
  *
  *    Contact: multiboost@googlegroups.com 
+ * 
  *    For more information and up-to-date version, please visit
  *        
  *                       http://www.multiboost.org/
@@ -54,8 +55,8 @@ namespace MultiBoost {
 		BaseLearner::declareArguments(args);
 		
 		args.declareArgument("baselearnertype", 
-							 "The name of the learner that serves as a basis for the product\n"
-							 "  and the number of base learners to be multiplied\n"
+							 "The name of the learner that serves as a basis for the tree\n"
+							 "  and the number of base learners to be used in tree\n"
 							 "  Don't forget to add its parameters\n",
 							 2, "<baseLearnerType> <numBaseLearners>");
 		
@@ -99,7 +100,7 @@ namespace MultiBoost {
 	{		
 		int ib = 0;
 		while ( 1 ) {
-			float phix = _baseLearners[ib]->cut(pData,idx);
+			AlphaReal phix = _baseLearners[ib]->cut(pData,idx);
 			if ( phix > 0 ) {
 				if ( _idxPairs[ ib ][ 0 ] > 0 ) { // step down
 					ib = _idxPairs[ ib ][ 0 ];
@@ -212,7 +213,7 @@ namespace MultiBoost {
 			NodePoint currentNode = pq.top();
 			pq.pop();
 			
-			cout << "Discarded nodes' edge improvements: " << currentNode._edgeImprovement << endl;
+			if (_verbose>3) cout << "Discarded node's edge improvement: " << currentNode._edgeImprovement << endl;
 			
 			if (currentNode._learner) delete currentNode._learner;
 			delete currentNode._constantLearner;
@@ -224,7 +225,7 @@ namespace MultiBoost {
 		
 		//calculate alpha
 		this->_alpha = 0.0;
-		float eps_min = 0.0, eps_pls = 0.0;
+		AlphaReal eps_min = 0.0, eps_pls = 0.0;
 		
 		//_pTrainingData->clearIndexSet();
 		_pTrainingData->loadIndexSet( origIdx );

@@ -23,6 +23,7 @@
  *    Foundation, Inc., 51 Franklin St, 5th Floor, Boston, MA 02110-1301 USA
  *
  *    Contact: multiboost@googlegroups.com 
+ * 
  *    For more information and up-to-date version, please visit
  *
  *                       http://www.multiboost.org/
