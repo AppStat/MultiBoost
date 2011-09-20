@@ -183,7 +183,7 @@ namespace MultiBoost {
 		//this contains the number of baselearners 
 		int ib = 0;
 
-		NodePoint tmpNodePoint, nodeLeft, nodeRight;
+		NodePointUCT tmpNodePoint, nodeLeft, nodeRight;
 
 		////////////////////////////////////////////////////////
 		//set the edge
@@ -475,7 +475,7 @@ namespace MultiBoost {
 // -----------------------------------------------------------------------
 
 
-void TreeLearnerUCT::calculateChildrenAndEnergies( NodePoint& bLearner, int depthIndex ) {
+void TreeLearnerUCT::calculateChildrenAndEnergies( NodePointUCT& bLearner, int depthIndex ) {
 	bLearner._extended = true;
 	_pTrainingData->loadIndexSet( bLearner._learnerIdxSet );
 	

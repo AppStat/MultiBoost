@@ -80,7 +80,7 @@ namespace MultiBoost {
 		}
 	};
 
-	struct NodePoint {
+	struct NodePointUCT {
 		BaseLearner* _learner;
 
 		BaseLearner* _rightChild;
@@ -102,7 +102,7 @@ namespace MultiBoost {
 
 		int			_depth;
 	};
-	typedef pair< AlphaReal, NodePoint > InnerNodeType;
+	typedef pair< AlphaReal, NodePointUCT > InnerNodeType;
 
 	/**
 	* A learner that loads a set of base learners, and boosts on the top of them. 
@@ -221,7 +221,7 @@ namespace MultiBoost {
 		//virtual double getEdge();
 
 	protected:
-		void calculateChildrenAndEnergies( NodePoint& bLearner, int depthIndex );
+		void calculateChildrenAndEnergies( NodePointUCT& bLearner, int depthIndex );
 
 
 		vector<BaseLearner*> _baseLearners; //!< the learners of the product

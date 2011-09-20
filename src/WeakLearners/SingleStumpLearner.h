@@ -63,6 +63,8 @@ namespace MultiBoost {
 	{
 	public:
 		
+		SingleStumpLearner() : _threshold(numeric_limits<FeatureReal>::signaling_NaN()) {}
+
 		/**
 		 * The destructor. Must be declared (virtual) for the proper destruction of 
 		 * the object.
