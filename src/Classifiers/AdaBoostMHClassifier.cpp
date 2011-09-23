@@ -782,7 +782,7 @@ namespace MultiBoost {
 			} 
             else 
             {
-                pOutInfo = new OutputInfo(_outputInfoFile, "e01hamauc");
+                pOutInfo = new OutputInfo(_outputInfoFile, "e01hamauc", false);
 			}
             
 		}
