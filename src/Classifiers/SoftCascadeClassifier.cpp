@@ -46,20 +46,20 @@ namespace MultiBoost {
     // -------------------------------------------------------------------------
     
     SoftCascadeClassifier::SoftCascadeClassifier(const nor_utils::Args &args, int verbose)
-	: _verbose(verbose), _args(args), _outputInfoFile("")
-	{
-		// The file with the step-by-step information
-		if ( args.hasArgument("outputinfo") )
-			args.getValue("outputinfo", 0, _outputInfoFile);
-		
-		if ( args.hasArgument("positivelabel") )
-		{
-			args.getValue("positivelabel", 0, _positiveLabelName);
-		} else {
-			cout << "The name of positive label has to be given!!!" << endl;
-			exit(-1);
-		}		
-	}
+        : _verbose(verbose), _args(args), _outputInfoFile("")
+    {
+        // The file with the step-by-step information
+        if ( args.hasArgument("outputinfo") )
+            args.getValue("outputinfo", 0, _outputInfoFile);
+                
+        if ( args.hasArgument("positivelabel") )
+        {
+            args.getValue("positivelabel", 0, _positiveLabelName);
+        } else {
+            cout << "The name of positive label has to be given!!!" << endl;
+            exit(-1);
+        }               
+    }
     
     // -------------------------------------------------------------------------
     
@@ -124,14 +124,14 @@ namespace MultiBoost {
         
         OutputInfo* pOutInfo = NULL;
         
-		if ( !_outputInfoFile.empty() ) 
-		{
+        if ( !_outputInfoFile.empty() ) 
+        {
             pOutInfo = new OutputInfo(_args, true);
             pOutInfo->setOutputList("sca", false, &_args);
             
-			pOutInfo->initialize(pData);
+            pOutInfo->initialize(pData);
             
-			pOutInfo->outputHeader(pData->getClassMap(), true, true, false);
+            pOutInfo->outputHeader(pData->getClassMap(), true, true, false);
             pOutInfo->separator();
             pOutInfo->outputUserHeader("thresh");
             pOutInfo->endLine();
@@ -172,37 +172,39 @@ namespace MultiBoost {
 //        cout << endl;
         
         vector<vector<int> > confMatrix(2);
-		confMatrix[0].resize(2);
-		fill( confMatrix[0].begin(), confMatrix[0].end(), 0 );
-		confMatrix[1].resize(2);
-		fill( confMatrix[1].begin(), confMatrix[1].end(), 0 );
-		
-	    // print accuracy
-		for(int i=0; i<numExamples; ++i )
-		{		
-			vector<Label>& labels = pData->getLabels(i);
-			if (labels[positiveLabelIndex].y>0) // pos label				
-				if (forecast[i]==1)
-					confMatrix[1][1]++;
-				else
-					confMatrix[1][0]++;
+        confMatrix[0].resize(2);
+        fill( confMatrix[0].begin(), confMatrix[0].end(), 0 );
+        confMatrix[1].resize(2);
+        fill( confMatrix[1].begin(), confMatrix[1].end(), 0 );
+                
+        // print accuracy
+        for(int i=0; i<numExamples; ++i )
+        {               
+            const Example& example = pData->getExample(i);
+            int labelY = example.getLabelY(positiveLabelIndex);
+
+            if (labelY > 0) // pos label                            
+                if (forecast[i]==1)
+                    confMatrix[1][1]++;
+                else
+                    confMatrix[1][0]++;
             else // negative label
                 if (forecast[i]==-1)
                     confMatrix[0][0]++;
                 else
                     confMatrix[0][1]++;
-		}			
-		
-		double acc = 100.0 * (confMatrix[0][0] + confMatrix[1][1]) / ((double) numExamples);
-		// output it
-		cout << endl;
-		cout << "Error Summary" << endl;
-		cout << "=============" << endl;
-		
-		cout << "Accuracy: " << setprecision(4) << acc << endl;
-		cout << setw(10) << "\t" << setw(10) << namemap.getNameFromIdx(1-positiveLabelIndex) << setw(10) << namemap.getNameFromIdx(positiveLabelIndex) << endl;
-		cout << setw(10) << namemap.getNameFromIdx(1-positiveLabelIndex) << setw(10) << confMatrix[0][0] << setw(10) << confMatrix[0][1] << endl;
-		cout << setw(10) << namemap.getNameFromIdx(positiveLabelIndex) << setw(10) << confMatrix[1][0] << setw(10) << confMatrix[1][1] << endl;		
+        }                       
+                
+        double acc = 100.0 * (confMatrix[0][0] + confMatrix[1][1]) / ((double) numExamples);
+        // output it
+        cout << endl;
+        cout << "Error Summary" << endl;
+        cout << "=============" << endl;
+                
+        cout << "Accuracy: " << setprecision(4) << acc << endl;
+        cout << setw(10) << "\t" << setw(10) << namemap.getNameFromIdx(1-positiveLabelIndex) << setw(10) << namemap.getNameFromIdx(positiveLabelIndex) << endl;
+        cout << setw(10) << namemap.getNameFromIdx(1-positiveLabelIndex) << setw(10) << confMatrix[0][0] << setw(10) << confMatrix[0][1] << endl;
+        cout << setw(10) << namemap.getNameFromIdx(positiveLabelIndex) << setw(10) << confMatrix[1][0] << setw(10) << confMatrix[1][1] << endl;         
         
         if (pData) {
             delete pData;
@@ -261,11 +263,11 @@ namespace MultiBoost {
         if (!_outputInfoFile.empty()) {
             //the header
             output  << "t" << OUTPUT_SEPARATOR
-            << "err" << OUTPUT_SEPARATOR
-            << "auc" << OUTPUT_SEPARATOR
-            << "fpr" << OUTPUT_SEPARATOR
-            << "tpr" << OUTPUT_SEPARATOR
-            << "nbeval" << endl;
+                    << "err" << OUTPUT_SEPARATOR
+                    << "auc" << OUTPUT_SEPARATOR
+                    << "fpr" << OUTPUT_SEPARATOR
+                    << "tpr" << OUTPUT_SEPARATOR
+                    << "nbeval" << endl;
         }            
                     
         
@@ -292,8 +294,10 @@ namespace MultiBoost {
                 int forecast = 1;
                 AlphaReal posterior = 0. ;
                 int nbEvaluations = 0 ;
-                vector<Label>& labels = pData->getLabels(i);
-                
+
+                const Example& example = pData->getExample(i);
+                int labelY = example.getLabelY(positiveLabelIndex);
+
                 for (int s = 0; s < numIterations && s < weakHypotheses.size(); ++s) {
                     
                     nbEvaluations += 1;
@@ -310,20 +314,20 @@ namespace MultiBoost {
                 outputs[i][1] = nbEvaluations;
                 
                 scores[i].second = outputs[i][0];
-                if (labels[positiveLabelIndex].y < 0) {
+                if (labelY < 0) {
                     scores[i].first = 0;
                     numWhyp += nbEvaluations;
                 }
                 else 
                     scores[i].first = 1;
                 
-                if (forecast * labels[positiveLabelIndex].y < 0) {
+                if (forecast * labelY < 0) {
                     err++;
                 }
                 
                 if (forecast > 0)
                 {
-                    if (labels[positiveLabelIndex].y > 0) {
+                    if (labelY > 0) {
                         TP++;
                     }
                     else {
@@ -369,16 +373,16 @@ namespace MultiBoost {
     // -------------------------------------------------------------------------
     
     void SoftCascadeClassifier::printOutputInfo(OutputInfo* pOutInfo, int t, 
-                                             InputData* pData, 
-                                             BaseLearner* pWeakHypothesis,
-                                             AlphaReal r)
-	{
+                                                InputData* pData, 
+                                                BaseLearner* pWeakHypothesis,
+                                                AlphaReal r)
+    {
         pOutInfo->outputIteration(t);
         pOutInfo->outputCustom(pData, pWeakHypothesis);
         pOutInfo->outputCurrentTime();
         pOutInfo->separator();
         pOutInfo->outputUserData(r);
-		pOutInfo->endLine();
+        pOutInfo->endLine();
         
     }
     

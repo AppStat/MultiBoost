@@ -111,16 +111,16 @@ namespace MultiBoost {
         InputData* loadInputData(const string& dataFileName, const string& shypFileName);
         
         /**
-		 * Print interation-wise information.
-		 * \date 21/07/2011
-		 */
+         * Print interation-wise information.
+         * \date 21/07/2011
+         */
         void printOutputInfo(OutputInfo* pOutInfo, int t, 
                              InputData* pData, 
                              BaseLearner* pWeakHypothesis,
                              AlphaReal r);
         
         
-    // internal structures
+        // internal structures
         /**
          * Defines the level of verbosity:
          * - 0 = no messages
@@ -132,7 +132,7 @@ namespace MultiBoost {
         const nor_utils::Args&  _args;  //!< The arguments defined by the user.
         string   _outputInfoFile; //!< The filename of the step-by-step information file that will be updated 
         
-        string	_positiveLabelName;
+        string  _positiveLabelName;
 
     private:
         

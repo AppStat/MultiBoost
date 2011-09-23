@@ -21,7 +21,7 @@
 
    This program is released under the terms of the license contained
    in the file LICENSE.
-	 ------------------------------------------------------------------ */
+   ------------------------------------------------------------------ */
 
 
 #define _FILE_OFFSET_BITS 64
@@ -36,22 +36,22 @@
 char buf[N_BUF];
 
 /*
-int main ( int argc, char** argv )
-{
-   int ii, kk, p;
-   srandom(1);
-   setbuffer ( stdout, buf, N_BUF );
-   for (kk = 0; kk < MEGABYTES * 515; kk+=3) {
-      p = 25+random()%50;
-      for (ii = 0; ii < p; ii++)
-         printf ( "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" );
-      for (ii = 0; ii < p-1; ii++)
-         printf ( "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" );
-      for (ii = 0; ii < p+1; ii++)
-         printf ( "ccccccccccccccccccccccccccccccccccccc" );
-   }
-   fflush(stdout);
-   return 0;
-}
+  int main ( int argc, char** argv )
+  {
+  int ii, kk, p;
+  srandom(1);
+  setbuffer ( stdout, buf, N_BUF );
+  for (kk = 0; kk < MEGABYTES * 515; kk+=3) {
+  p = 25+random()%50;
+  for (ii = 0; ii < p; ii++)
+  printf ( "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" );
+  for (ii = 0; ii < p-1; ii++)
+  printf ( "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb" );
+  for (ii = 0; ii < p+1; ii++)
+  printf ( "ccccccccccccccccccccccccccccccccccccc" );
+  }
+  fflush(stdout);
+  return 0;
+  }
 */
 

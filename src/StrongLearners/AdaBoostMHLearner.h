@@ -70,9 +70,9 @@ namespace MultiBoost {
          * using the helpers provided by class Args.
          * \date 13/11/2005
          */
-        AdaBoostMHLearner()
+    AdaBoostMHLearner()
         : _numIterations(0), _maxTime(-1), _theta(0), _verbose(1), _smallVal(1E-10),
-        _resumeShypFileName(""), _outputInfoFile(""), _weightFile(""), _withConstantLearner(false), _fastResumeProcess(true) {}
+            _resumeShypFileName(""), _outputInfoFile(""), _weightFile(""), _withConstantLearner(false), _fastResumeProcess(true) {}
         
         /**
          * Start the learning process.
@@ -90,9 +90,9 @@ namespace MultiBoost {
          * \see OutputInfo
          * \date 10/11/2005
          */        
-		void run( const nor_utils::Args& args, InputData* pTrainingData, const string baseLearnerName, const int numIterations, vector<BaseLearner*>& foundHypotheses );
-		
-		
+        void run( const nor_utils::Args& args, InputData* pTrainingData, const string baseLearnerName, const int numIterations, vector<BaseLearner*>& foundHypotheses );
+                
+                
         /**
          * Performs the classification using the AdaBoostMHClassifier.
          * \param args The arguments provided by the command line with all
@@ -208,7 +208,7 @@ namespace MultiBoost {
         
         string  _baseLearnerName; //!< The name of the basic learner used by AdaBoost. 
         string  _shypFileName; //!< File name of the strong hypothesis.
-        bool	   _isShypCompressed; 
+        bool       _isShypCompressed; 
         
         string  _trainFileName;
         string  _testFileName;

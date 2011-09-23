@@ -1,34 +1,34 @@
 /*
-*
-*    MultiBoost - Multi-purpose boosting package
-*
-*    Copyright (C)        AppStat group
-*                         Laboratoire de l'Accelerateur Lineaire
-*                         Universite Paris-Sud, 11, CNRS
-*
-*    This file is part of the MultiBoost library
-*
-*    This library is free software; you can redistribute it
-*    and/or modify it under the terms of the GNU General Public
-*    License as published by the Free Software Foundation
-*    version 2.1 of the License.
-*
-*    This library is distributed in the hope that it will be useful,
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*    General Public License for more details.
-*
-*    You should have received a copy of the GNU General Public
-*    License along with this library; if not, write to the Free Software
-*    Foundation, Inc., 51 Franklin St, 5th Floor, Boston, MA 02110-1301 USA
-*
-*    Contact: : multiboost@googlegroups.com
-*
-*    For more information and up-to-date version, please visit
-*
-*                       http://www.multiboost.org/
-*
-*/
+ *
+ *    MultiBoost - Multi-purpose boosting package
+ *
+ *    Copyright (C)        AppStat group
+ *                         Laboratoire de l'Accelerateur Lineaire
+ *                         Universite Paris-Sud, 11, CNRS
+ *
+ *    This file is part of the MultiBoost library
+ *
+ *    This library is free software; you can redistribute it
+ *    and/or modify it under the terms of the GNU General Public
+ *    License as published by the Free Software Foundation
+ *    version 2.1 of the License.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public
+ *    License along with this library; if not, write to the Free Software
+ *    Foundation, Inc., 51 Franklin St, 5th Floor, Boston, MA 02110-1301 USA
+ *
+ *    Contact: : multiboost@googlegroups.com
+ *
+ *    For more information and up-to-date version, please visit
+ *
+ *                       http://www.multiboost.org/
+ *
+ */
 
 
 
@@ -43,12 +43,12 @@
 //////////////////////////////////////////////////////////////////////////////////////////////
 // extern for lapack routines
 extern "C" /* Subroutine */ int dgetri_(integer *n, doublereal *a, integer *lda, integer 
-	*ipiv, doublereal *work, integer *lwork, integer *info);
+                                        *ipiv, doublereal *work, integer *lwork, integer *info);
 extern "C" /* Subroutine */ int sgemm_(char *transa, char *transb, integer *m, integer *
-	n, integer *k, real *alpha, real *a, integer *lda, real *b, integer *
-	ldb, real *beta, real *c__, integer *ldc);
+                                       n, integer *k, real *alpha, real *a, integer *lda, real *b, integer *
+                                       ldb, real *beta, real *c__, integer *ldc);
 extern "C" /* Subroutine */ int dgetrf_(integer *m, integer *n, doublereal *a, integer *
-	lda, integer *ipiv, integer *info);
+                                        lda, integer *ipiv, integer *info);
 
 
 int matrixInverse( integer *n, doublereal *a );
@@ -58,7 +58,7 @@ void solveEquationSystem( double* X, double* b, int* N );
 
 
 void solveEquationSystem( double* X, double* b, int* N ) {
-	matrixInverse( (integer*) N, (doublereal*) X );
+    matrixInverse( (integer*) N, (doublereal*) X );
 }
 
 
@@ -66,7 +66,7 @@ int matrixInverse( integer *n, doublereal *a ) {
     integer info;
     static integer lwork = WSIZE;
     
-	dgetrf_( n, n, a, n, ipiv, &info);
+    dgetrf_( n, n, a, n, ipiv, &info);
     dgetri_( n, a, n, ipiv, work, &lwork, &info);    
     return info;
 }

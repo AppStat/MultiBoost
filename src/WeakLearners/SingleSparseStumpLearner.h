@@ -55,47 +55,47 @@ using namespace std;
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace MultiBoost {
-	
-	/**
-	 * A \b single threshold decision stump learner. 
-	 * There is ONE and ONE ONLY threshold here. It works on sparse features.
-	 */
-	class SingleSparseStumpLearner : public virtual SingleStumpLearner
-	{
-	public:
-		/**
-		 * Returns itself as object.
-		 * \remark It uses the trick described in http://www.parashift.com/c++-faq-lite/serialization.html#faq-36.8
-		 * for the auto-registering classes.
-		 * \date 14/11/2005
-		 */
-		virtual BaseLearner* subCreate() { return new SingleSparseStumpLearner(); }
-		
-		/**
-		 * The destructor. Must be declared (virtual) for the proper destruction of 
-		 * the object.
-		 */
-		virtual ~SingleSparseStumpLearner() {}
-		
-		/**
-		 * Run the learner to build the classifier on the given data.
-		 * \see FeaturewiseLearner::run
-		 * \date 1/11/2009
-		 */
-		virtual AlphaReal run();
-		
-		/**
-		 * Run the learner to build the classifier using a single feature from the given data.
-		 * \see FeaturewiseLearner::run
-		 * \date 11/11/2005
-		 */	
-		virtual AlphaReal run( int colIdx );
-		
-	protected:
-	};
-	
-	//////////////////////////////////////////////////////////////////////////
-	
+        
+    /**
+     * A \b single threshold decision stump learner. 
+     * There is ONE and ONE ONLY threshold here. It works on sparse features.
+     */
+    class SingleSparseStumpLearner : public virtual SingleStumpLearner
+    {
+    public:
+        /**
+         * Returns itself as object.
+         * \remark It uses the trick described in http://www.parashift.com/c++-faq-lite/serialization.html#faq-36.8
+         * for the auto-registering classes.
+         * \date 14/11/2005
+         */
+        virtual BaseLearner* subCreate() { return new SingleSparseStumpLearner(); }
+                
+        /**
+         * The destructor. Must be declared (virtual) for the proper destruction of 
+         * the object.
+         */
+        virtual ~SingleSparseStumpLearner() {}
+                
+        /**
+         * Run the learner to build the classifier on the given data.
+         * \see FeaturewiseLearner::run
+         * \date 1/11/2009
+         */
+        virtual AlphaReal run();
+                
+        /**
+         * Run the learner to build the classifier using a single feature from the given data.
+         * \see FeaturewiseLearner::run
+         * \date 11/11/2005
+         */     
+        virtual AlphaReal run( int colIdx );
+                
+    protected:
+    };
+        
+    //////////////////////////////////////////////////////////////////////////
+        
 } // end of namespace MultiBoost
 
 #endif // __SINGLE_SPARSE_STUMP_LEARNER_H

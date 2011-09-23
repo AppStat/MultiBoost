@@ -49,10 +49,10 @@
 using namespace std;
 
 namespace MultiBoost {
-	
-	// forward declaration to avoid an include
-	class BaseLearner;
-	class BaseOutputInfoType;
+        
+    // forward declaration to avoid an include
+    class BaseLearner;
+    class BaseOutputInfoType;
     
     /**
      * A table representing the votes for each example.
@@ -72,53 +72,53 @@ namespace MultiBoost {
      * \date 05/07/2011
      */  
     template<typename T>
-    struct SpecificInfo
-    {
-        typedef map<string, vector<T> > Type;
-    };
+        struct SpecificInfo
+        {
+            typedef map<string, vector<T> > Type;
+        };
     
-	
-	//////////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////////
-	
-	/**
-	 * Format and output step-by-step information.
-	 * With this class it is possible to output and update
-	 * the error rates, margins and the edge.
-	 * These function must be called at each iteration with the
-	 * newly found weak hypothesis, but \b before the update of the
-	 * weights.
-	 * \warning Don't forget to begin the list of information
-	 * printed with outputIteration(), and close it with
-	 * a call to endLine()!
-	 * \date 16/11/2005
-	 */
-	class OutputInfo
-	{
-	public:
-		
-		/**
-		 * The constructor. Create the object and open the output file.
-		 * \param outputInfoFile The name of the file which will be updated
-		 * with the data.
-		 * \date 14/11/2005
-		 */
-		explicit OutputInfo(const string& outputInfoFile, bool customUpdate = false);
+        
+    //////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
+        
+    /**
+     * Format and output step-by-step information.
+     * With this class it is possible to output and update
+     * the error rates, margins and the edge.
+     * These function must be called at each iteration with the
+     * newly found weak hypothesis, but \b before the update of the
+     * weights.
+     * \warning Don't forget to begin the list of information
+     * printed with outputIteration(), and close it with
+     * a call to endLine()!
+     * \date 16/11/2005
+     */
+    class OutputInfo
+    {
+    public:
+                
+        /**
+         * The constructor. Create the object and open the output file.
+         * \param outputInfoFile The name of the file which will be updated
+         * with the data.
+         * \date 14/11/2005
+         */
+        explicit OutputInfo(const string& outputInfoFile, bool customUpdate = false);
         
         /**
-		 * The constructor. Create the object and open the output file.
-		 * \param outputInfoFile The name of the file which will be updated
+         * The constructor. Create the object and open the output file.
+         * \param outputInfoFile The name of the file which will be updated
          * \param outList The different outputs to print
-		 * \date 20/06/2011
+         * \date 20/06/2011
          */
         OutputInfo(const string& outputInfoFile, const string & outList, bool customUpdate = false);
-		        
+                        
         /**
-		 * The constructor. Create the object and open the output file.
+         * The constructor. Create the object and open the output file.
          * \param args The arguments passed through command line
          * \param clArg The command line argument that gives the output file name
-		 * \date 17/06/2011
-		 */
+         * \date 17/06/2011
+         */
         explicit OutputInfo(const nor_utils::Args& args, bool customUpdate = false, const string & clArg = "outputinfo");
         
         
@@ -129,94 +129,103 @@ namespace MultiBoost {
          */
         void setOutputList(const string& list, bool append = false, const nor_utils::Args* args = NULL);
         
-		/**
-		 * Just output the iteration number.
-		 * \param t The iteration number.
-		 * \date 14/11/2005
-		 */
-		void outputIteration(int t);
-		void initialize(InputData* pData);
-		
-		/**
-		 * Just output the current time.
-		 * \param 
-		 * \date 14/11/2005
-		 */
-		void outputCurrentTime( void );
-		
-		/**
-		 * Output the column names
+        /**
+         * Just output the iteration number.
+         * \param t The iteration number.
+         * \date 14/11/2005
+         */
+        void outputIteration(int t);
+        void initialize(InputData* pData);
+                
+        /**
+         * Just output the current time.
+         * \param 
+         * \date 14/11/2005
+         */
+        void outputCurrentTime( void );
+                
+        /**
+         * Output the column names
          * Note that this method must be called after the 
          * initialization of all the datasets
          * \param namemap The structure that holds the class information
-		 * \date 04/08/2006
-		 */
-		void outputHeader(const NameMap& namemap, bool outputIterations = true, bool outputTime = true, bool endline = true);
-		
+         * \date 04/08/2006
+         */
+        void outputHeader(const NameMap& namemap, bool outputIterations = true, bool outputTime = true, bool endline = true);
+        /**
+         * Just return the sum of alphas
+         * \param pData pointer of the input data
+         * \date 04/04/2012
+         */             
+        AlphaReal getSumOfAlphas( InputData* pData )
+        {
+	    return _alphaSums[pData];
+        }
+                
 
         /**
          * Output the information the user wants
          * This "wish-list" is specified either through 
          * the command line or directly through the constructor
-		 * \param pData The input data.
-		 * \param pWeakHypothesis The current weak hypothesis.
+         * \param pData The input data.
+         * \param pWeakHypothesis The current weak hypothesis.
          * \date 17/06/2011
          */
         void outputCustom(InputData* pData, BaseLearner* pWeakHypothesis = 0);
-		
-		/**
-		 * End of line in the file stream.
-		 * Call it when all the needed information has been outputted.
-		 * \date 16/11/2005
-		 */
-		void endLine() { _outStream << endl; }
-
-		
+                
         /**
-		 * Separator in the file stream.
-		 * \date 20/06/2011
-		 */
-		void separator() { _outStream << "\t" << "|" << OUTPUT_SEPARATOR; }
+         * End of line in the file stream.
+         * Call it when all the needed information has been outputted.
+         * \date 16/11/2005
+         */
+        void endLine() { _outStream << endl; }
 
-		void outputUserData( float data )
-		{
-			_outStream << data;
-		}
+                
+        /**
+         * Separator in the file stream.
+         * \date 20/06/2011
+         */
+        void separator() { _outStream << OUTPUT_SEPARATOR << OUTPUT_SEPARATOR; }
+
+        void outputUserData( float data )
+        {
+            _outStream << data;
+        }
         
-		void outputUserHeader( const string& h )
-		{
-			_outStream << h;
-		}
-		
-		table& getTable( InputData* pData )
-		{
-			table& g = _gTableMap[pData];
-			return g;
-		}
-		
-		void setTable( InputData* pData, table& tmpTable )
-		{
-			table& g = _gTableMap[pData];
+        void outputUserHeader( const string& h )
+        {
+            _outStream << h;
+        }
+                
+        table& getTable( InputData* pData )
+        {
+            table& g = _gTableMap[pData];
+            return g;
+        }
+                
+        void setTable( InputData* pData, table& tmpTable )
+        {
+            table& g = _gTableMap[pData];
             
             // in case the dimensions are different
-            const int newDimension = tmpTable.size();
+            const int newDimension = (int)tmpTable.size();
             const int numClasses = pData->getNumClasses();
-            const int oldDimension = g.size();
+            const int oldDimension = (int)g.size();
             
             g.resize(newDimension);
             for (int i = oldDimension; i < newDimension; ++i) {
                 g[i].resize(numClasses, 0.);
             }
 
-			for( int i=0; i<g.size(); i++ )
-				copy( tmpTable[i].begin(), tmpTable[i].end(), g[i].begin() ); 
-		}
-		
-		table& getMargins( InputData* pData )
-		{
-			table& g = _margins[pData];
-			return g;
-		}
+            for( int i=0; i<g.size(); i++ )
+                copy( tmpTable[i].begin(), tmpTable[i].end(), g[i].begin() ); 
+        }
+                
+        table& getMargins( InputData* pData )
+        {
+            table& g = _margins[pData];
+            return g;
+        }
         
         /*
          * Updates the G and Margin tables and alphaSums vector
@@ -236,13 +245,13 @@ namespace MultiBoost {
         
         BaseOutputInfoType* getOutputInfoObject(const string& type);
 
-		
-	protected:
-		
-		
-		ofstream                _outStream; //!< The output stream 
-		
-		time_t				   _beginingTime;
+                
+    protected:
+                
+                
+        ofstream                _outStream; //!< The output stream 
+                
+        time_t                             _beginingTime;
         
         
         // TODO: refactoring : replace the general 
@@ -250,38 +259,38 @@ namespace MultiBoost {
         // by 
         // map<InputData*, table*> whithin BaseOutputInfoType subclasses
         // so that they can sharing tables through pointers.
-		
-		/**
-		 * Maps the data to its g(x) table.
-		 * It is needed to keep this information saved from iteration to
-		 * iteration.
-		 * \see table
-		 * \see outputError()
-		 * \date 16/11/2005
-		 */
-		map<InputData*, table> _gTableMap; 
-		
-		/**
-		 * Maps the data to the margins table.
-		 * It is needed to keep this information saved from iteration to
-		 * iteration.
-		 * \see table
-		 * \see outputMargins()
-		 * \date 16/11/2005
-		 */
-		map<InputData*, table>  _margins;
-		
-		/**
-		 * Maps the data to the sum of the alpha.
-		 * It is needed to keep this information saved from iteration to
-		 * iteration.
-		 * \see outputMargins()
-		 * \date 16/11/2005
-		 */
-		map<InputData*, AlphaReal> _alphaSums;
-		
-		
-		//double getROC( vector< pair< int, AlphaReal > > data );
+                
+        /**
+         * Maps the data to its g(x) table.
+         * It is needed to keep this information saved from iteration to
+         * iteration.
+         * \see table
+         * \see outputError()
+         * \date 16/11/2005
+         */
+        map<InputData*, table> _gTableMap; 
+                
+        /**
+         * Maps the data to the margins table.
+         * It is needed to keep this information saved from iteration to
+         * iteration.
+         * \see table
+         * \see outputMargins()
+         * \date 16/11/2005
+         */
+        map<InputData*, table>  _margins;
+                
+        /**
+         * Maps the data to the sum of the alpha.
+         * It is needed to keep this information saved from iteration to
+         * iteration.
+         * \see outputMargins()
+         * \date 16/11/2005
+         */
+        map<InputData*, AlphaReal> _alphaSums;
+                
+                
+        //double getROC( vector< pair< int, AlphaReal > > data );
         
         /* 
          * Keeps the list of the output types the user wants to be output
@@ -304,8 +313,8 @@ namespace MultiBoost {
          * \date 04/07/2011
          */
         bool _customTablesUpdate;
-		
-	};
+                
+    };
     
     //////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -330,15 +339,15 @@ namespace MultiBoost {
         BaseOutputInfoType(const nor_utils::Args& args) {};
         
         /*
-         Computes the output it is specialized in and print it.
-         * \param outStream The stream where the output is directed to
-         * \param pData The input data.
-		 * \param pWeakHypothesis The current weak hypothesis.
-		 * \see table
-		 * \see _gTableMap
-         * \see _alphaSums
-         * \date 17/06/2011
-         */
+          Computes the output it is specialized in and print it.
+          * \param outStream The stream where the output is directed to
+          * \param pData The input data.
+          * \param pWeakHypothesis The current weak hypothesis.
+          * \see table
+          * \see _gTableMap
+          * \see _alphaSums
+          * \date 17/06/2011
+          */
         virtual void computeAndOutput(ostream& outStream, InputData* pData, 
                                       map<InputData*, table>& gTableMap, 
                                       map<InputData*, table>& marginsTableMap, 
@@ -446,7 +455,7 @@ namespace MultiBoost {
                               map<InputData*, AlphaReal>& alphaSums,
                               BaseLearner* pWeakHypothesis = 0);
     };
-	
+        
     //////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////
     
@@ -469,7 +478,7 @@ namespace MultiBoost {
                               BaseLearner* pWeakHypothesis = 0);
     };
 
-	//////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////
     
     /**
@@ -490,7 +499,7 @@ namespace MultiBoost {
                               map<InputData*, AlphaReal>& alphaSums,
                               BaseLearner* pWeakHypothesis = 0);
     };
-	//////////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////
     
     /**
@@ -511,8 +520,8 @@ namespace MultiBoost {
                               map<InputData*, AlphaReal>& alphaSums,
                               BaseLearner* pWeakHypothesis = 0);
     };
-	
-	
+        
+        
     //////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////
     
@@ -617,7 +626,7 @@ namespace MultiBoost {
         
     public:
         
-        void outputHeader(ostream& outStream, const NameMap& namemap) { outStream << "minmargin" << OUTPUT_SEPARATOR << HEADER_FIELD_LENGTH << "negmargins" ;}
+        void outputHeader(ostream& outStream, const NameMap& namemap) { outStream << "min_mar" ;}
         
         //////////////////////////////////////////////////////////////////////////////////////////////
         
@@ -804,7 +813,7 @@ namespace MultiBoost {
     protected:
         
         string  _positiveLabelName;
-		//        vector<vector<AlphaReal> > _posteriors;
+        //        vector<vector<AlphaReal> > _posteriors;
         
         vector<BaseLearner*> _currentBaseLearners;
         AlphaReal _rejectionThreshold;
@@ -824,15 +833,15 @@ namespace MultiBoost {
                 exit(-1);
             }
         }
-		
+                
         
         void outputHeader(ostream& outStream, const NameMap& namemap) 
         {
             outStream   << "err" << OUTPUT_SEPARATOR
-			<< HEADER_FIELD_LENGTH << "auc" << OUTPUT_SEPARATOR
-			<< HEADER_FIELD_LENGTH << "fpr" << OUTPUT_SEPARATOR
-			<< HEADER_FIELD_LENGTH << "tpr" << OUTPUT_SEPARATOR
-			<< HEADER_FIELD_LENGTH << "nbeval" ;
+                        << HEADER_FIELD_LENGTH << "auc" << OUTPUT_SEPARATOR
+                        << HEADER_FIELD_LENGTH << "fpr" << OUTPUT_SEPARATOR
+                        << HEADER_FIELD_LENGTH << "tpr" << OUTPUT_SEPARATOR
+                        << HEADER_FIELD_LENGTH << "nbeval" ;
         }
         
         //////////////////////////////////////////////////////////////////////////////////////////////
@@ -856,10 +865,10 @@ namespace MultiBoost {
         {
             _currentBaseLearners = vBaseLearners;
         }
-		
+                
     };
     
-	
+        
     //////////////////////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////////////////////
     

@@ -1,34 +1,34 @@
 /*
-*
-*    MultiBoost - Multi-purpose boosting package
-*
-*    Copyright (C)        AppStat group
-*                         Laboratoire de l'Accelerateur Lineaire
-*                         Universite Paris-Sud, 11, CNRS
-*
-*    This file is part of the MultiBoost library
-*
-*    This library is free software; you can redistribute it 
-*    and/or modify it under the terms of the GNU General Public
-*    License as published by the Free Software Foundation
-*    version 2.1 of the License.
-*
-*    This library is distributed in the hope that it will be useful,
-*    but WITHOUT ANY WARRANTY; without even the implied warranty of
-*    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-*    General Public License for more details.
-*
-*    You should have received a copy of the GNU General Public
-*    License along with this library; if not, write to the Free Software
-*    Foundation, Inc., 51 Franklin St, 5th Floor, Boston, MA 02110-1301 USA
-*
-*    Contact: : multiboost@googlegroups.com
-*
-*    For more information and up-to-date version, please visit
-*        
-*                       http://www.multiboost.org/
-*
-*/
+ *
+ *    MultiBoost - Multi-purpose boosting package
+ *
+ *    Copyright (C)        AppStat group
+ *                         Laboratoire de l'Accelerateur Lineaire
+ *                         Universite Paris-Sud, 11, CNRS
+ *
+ *    This file is part of the MultiBoost library
+ *
+ *    This library is free software; you can redistribute it 
+ *    and/or modify it under the terms of the GNU General Public
+ *    License as published by the Free Software Foundation
+ *    version 2.1 of the License.
+ *
+ *    This library is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *    General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public
+ *    License along with this library; if not, write to the Free Software
+ *    Foundation, Inc., 51 Franklin St, 5th Floor, Boston, MA 02110-1301 USA
+ *
+ *    Contact: : multiboost@googlegroups.com
+ *
+ *    For more information and up-to-date version, please visit
+ *        
+ *                       http://www.multiboost.org/
+ *
+ */
 
 
 #include <ctime> // for time
@@ -50,62 +50,62 @@
 
 namespace MultiBoost {
 
-	// -----------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------
 
-	void SoftCascadeLearner::getArgs(const nor_utils::Args& args)
-	{
-		if ( args.hasArgument("verbose") )
-			args.getValue("verbose", 0, _verbose);
+    void SoftCascadeLearner::getArgs(const nor_utils::Args& args)
+    {
+        if ( args.hasArgument("verbose") )
+            args.getValue("verbose", 0, _verbose);
 
-		///////////////////////////////////////////////////
-		// get the output strong hypothesis file name, if given
-		if ( args.hasArgument("shypname") )
-			args.getValue("shypname", 0, _shypFileName);
-		else
-			_shypFileName = string(SHYP_NAME);
+        ///////////////////////////////////////////////////
+        // get the output strong hypothesis file name, if given
+        if ( args.hasArgument("shypname") )
+            args.getValue("shypname", 0, _shypFileName);
+        else
+            _shypFileName = string(SHYP_NAME);
 
-		_shypFileName = nor_utils::addAndCheckExtension(_shypFileName, SHYP_EXTENSION);
+        _shypFileName = nor_utils::addAndCheckExtension(_shypFileName, SHYP_EXTENSION);
 
 
-		///////////////////////////////////////////////////
+        ///////////////////////////////////////////////////
 
         //TODO : create an abstract classe for cascade compliant base learners and accept only its offspring!
-		// get the name of the learner
-		_baseLearnerName = "HaarSingleStumpLearner";
-		if ( args.hasArgument("learnertype") )
-            //			args.getValue("learnertype", 0, _baseLearnerName);
+        // get the name of the learner
+        _baseLearnerName = "HaarSingleStumpLearner";
+        if ( args.hasArgument("learnertype") )
+            //                  args.getValue("learnertype", 0, _baseLearnerName);
             cout << "! Only HaarSingleStumpeLearner is allowed.\n";
         
-		// -train <dataFile> <nInterations>
-		if ( args.hasArgument("train") )
-		{
-			args.getValue("train", 0, _trainFileName);
-			args.getValue("train", 1, _numIterations);
-		}
-		// -traintest <trainingDataFile> <testDataFile> <nInterations>
-		else if ( args.hasArgument("traintest") ) 
-		{
-			args.getValue("traintest", 0, _trainFileName);
-			args.getValue("traintest", 1, _testFileName);
-			args.getValue("traintest", 2, _numIterations);
-		}
+        // -train <dataFile> <nInterations>
+        if ( args.hasArgument("train") )
+        {
+            args.getValue("train", 0, _trainFileName);
+            args.getValue("train", 1, _numIterations);
+        }
+        // -traintest <trainingDataFile> <testDataFile> <nInterations>
+        else if ( args.hasArgument("traintest") ) 
+        {
+            args.getValue("traintest", 0, _trainFileName);
+            args.getValue("traintest", 1, _testFileName);
+            args.getValue("traintest", 2, _numIterations);
+        }
 
-		// The file with the step-by-step information
-		if ( args.hasArgument("outputinfo") )
-			args.getValue("outputinfo", 0, _outputInfoFile);
+        // The file with the step-by-step information
+        if ( args.hasArgument("outputinfo") )
+            args.getValue("outputinfo", 0, _outputInfoFile);
         
         
-		// --constant: check constant learner in each iteration
-		if ( args.hasArgument("constant") )
-			_withConstantLearner = true;
+        // --constant: check constant learner in each iteration
+        if ( args.hasArgument("constant") )
+            _withConstantLearner = true;
         
         if ( args.hasArgument("positivelabel") )
-		{
-			args.getValue("positivelabel", 0, _positiveLabelName);
-		} else {
-			cout << "Error : The name of positive label must to given. \n Type --h softcascade to know the mandatory options." << endl;
-			exit(-1);
-		}
+        {
+            args.getValue("positivelabel", 0, _positiveLabelName);
+        } else {
+            cout << "Error : The name of positive label must to given. \n Type --h softcascade to know the mandatory options." << endl;
+            exit(-1);
+        }
         
         if (args.hasArgument("trainposteriors")) {
             args.getValue("trainposteriors", 0, _trainPosteriorsFileName);
@@ -140,8 +140,8 @@ namespace MultiBoost {
         }
         else {
             _fullRun = true;
-			_unCalibratedShypFileName = "shypToBeCalibrated.xml";
-			cout << "The strong hypothesis file will be seved into the file " << _unCalibratedShypFileName;
+            _unCalibratedShypFileName = "shypToBeCalibrated.xml";
+            cout << "The strong hypothesis file will be seved into the file " << _unCalibratedShypFileName;
             //cout << "Error : the shyp file of the uncalibrated trained classifier must be given ! \n";
             //exit(-1);
 
@@ -152,18 +152,19 @@ namespace MultiBoost {
             args.getValue("bootstrap", 0, _bootstrapFileName);
             args.getValue("bootstrap", 1, _bootstrapRate);
         }
-	}
+    }
 
-	// -----------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------
     
     int SoftCascadeLearner::getInstanceLabel(InputData* pData, int i, int positiveLabelIndex) const
     {
-        vector<Label>& labels = pData->getLabels(i);
-        int l = labels[positiveLabelIndex].y;
-        return (l+1) / 2; 
+        const Example& example = pData->getExample(i);
+        int labelY = example.getLabelY(positiveLabelIndex);
+            
+        return (labelY+1) / 2; 
     }
     
-	// -----------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------
 
     void SoftCascadeLearner::initializeRejectionDistributionVector(const int iNumberOfStages, vector<double>& oVector)
     {
@@ -198,7 +199,7 @@ namespace MultiBoost {
         }
     }
 
-	// -----------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------
     
     AlphaReal SoftCascadeLearner::computeSeparationSpan(InputData* pData, const vector<AlphaReal> & iPosteriors, int positiveLabelIndex)
     {
@@ -223,22 +224,22 @@ namespace MultiBoost {
         return edgePos / numPositiveExamples - edgeNeg / numNegativeExamples;
     }
     
-	// -----------------------------------------------------------------------------------
+    // -----------------------------------------------------------------------------------
     
     void SoftCascadeLearner::updatePosteriors( InputData* pData, BaseLearner* weakHypotheses, vector<AlphaReal>& oPosteriors, int positiveLabelIndex )
-	{
-		const int numExamples = pData->getNumExamples();		
-		
-		AlphaReal alpha = weakHypotheses->getAlpha();
+    {
+        const int numExamples = pData->getNumExamples();                
+                
+        AlphaReal alpha = weakHypotheses->getAlpha();
 
-		for (int i = 0; i < numExamples; ++i)
-		{
-			oPosteriors[i] += alpha * weakHypotheses->classify(pData, i, positiveLabelIndex);
-		}			
-	}
-	
-	
-	// -------------------------------------------------------------------------
+        for (int i = 0; i < numExamples; ++i)
+        {
+            oPosteriors[i] += alpha * weakHypotheses->classify(pData, i, positiveLabelIndex);
+        }                       
+    }
+        
+        
+    // -------------------------------------------------------------------------
     
     void SoftCascadeLearner::computePosteriors(InputData* pData, vector<BaseLearner*> & weakHypotheses, vector<AlphaReal> & oPosteriors, int positiveLabelIndex)
     {
@@ -247,18 +248,18 @@ namespace MultiBoost {
         oPosteriors.resize(numExamples);
         fill(oPosteriors.begin(), oPosteriors.end(), 0. );
         
-        vector<BaseLearner*>::iterator whyIt = weakHypotheses.begin();				
-		for (;whyIt != weakHypotheses.end(); ++whyIt )
-		{
-			BaseLearner* currWeakHyp = *whyIt;
-			AlphaReal alpha = currWeakHyp->getAlpha();
-			
-			for (int i = 0; i < numExamples; ++i)
-			{
-				AlphaReal alphaH = alpha * currWeakHyp->classify(pData, i, positiveLabelIndex);
-				oPosteriors[i] += alphaH;
-			}			
-		}
+        vector<BaseLearner*>::iterator whyIt = weakHypotheses.begin();                          
+        for (;whyIt != weakHypotheses.end(); ++whyIt )
+        {
+            BaseLearner* currWeakHyp = *whyIt;
+            AlphaReal alpha = currWeakHyp->getAlpha();
+                        
+            for (int i = 0; i < numExamples; ++i)
+            {
+                AlphaReal alphaH = alpha * currWeakHyp->classify(pData, i, positiveLabelIndex);
+                oPosteriors[i] += alphaH;
+            }                       
+        }
     }
     
     // -----------------------------------------------------------------------------------
@@ -384,32 +385,32 @@ namespace MultiBoost {
 #pragma mark -
     
     void SoftCascadeLearner::run(const nor_utils::Args& args)
-	{
-		// load the arguments
-		this->getArgs(args);
+    {
+        // load the arguments
+        this->getArgs(args);
         
         //print cascade properties
         if (_verbose > 0) {
             cout    << "[+] Softcascade parameters :" << endl
-            << "\t --> target detection rate = " << _targetDetectionRate << endl
-            << "\t --> alpha (exp param) = " << _alphaExponentialParameter << endl
-            << "\t --> bootstrap rate = " << _bootstrapRate << endl
-            << endl;
+                    << "\t --> target detection rate = " << _targetDetectionRate << endl
+                    << "\t --> alpha (exp param) = " << _alphaExponentialParameter << endl
+                    << "\t --> bootstrap rate = " << _bootstrapRate << endl
+                    << endl;
         }
         
 
-		// get the registered weak learner (type from name)
-		BaseLearner* pWeakHypothesisSource = 
-			BaseLearner::RegisteredLearners().getLearner(_baseLearnerName);
-		// initialize learning options; normally it's done in the strong loop
-		// also, here we do it for Product learners, so input data can be created
-		pWeakHypothesisSource->initLearningOptions(args);
+        // get the registered weak learner (type from name)
+        BaseLearner* pWeakHypothesisSource = 
+            BaseLearner::RegisteredLearners().getLearner(_baseLearnerName);
+        // initialize learning options; normally it's done in the strong loop
+        // also, here we do it for Product learners, so input data can be created
+        pWeakHypothesisSource->initLearningOptions(args);
 
-		// get the training input data, and load it
+        // get the training input data, and load it
 
-		InputData* pTrainingData = pWeakHypothesisSource->createInputData();
-		pTrainingData->initOptions(args);
-		pTrainingData->load(_trainFileName, IT_TRAIN, 5);
+        InputData* pTrainingData = pWeakHypothesisSource->createInputData();
+        pTrainingData->initOptions(args);
+        pTrainingData->load(_trainFileName, IT_TRAIN, 5);
 
         InputData* pBootstrapData = NULL;
         if (!_bootstrapFileName.empty()) {
@@ -418,33 +419,33 @@ namespace MultiBoost {
             pBootstrapData->load(_bootstrapFileName, IT_TRAIN, 5);
         }
         
-		// get the testing input data, and load it
-		InputData* pTestData = NULL;
-		if ( !_testFileName.empty() )
-		{
-			pTestData = pWeakHypothesisSource->createInputData();
-			pTestData->initOptions(args);
-			pTestData->load(_testFileName, IT_TEST, 5);
-		}
+        // get the testing input data, and load it
+        InputData* pTestData = NULL;
+        if ( !_testFileName.empty() )
+        {
+            pTestData = pWeakHypothesisSource->createInputData();
+            pTestData->initOptions(args);
+            pTestData->load(_testFileName, IT_TEST, 5);
+        }
 
-		Serialization ss(_shypFileName, false );
-		ss.writeHeader(_baseLearnerName);
+        Serialization ss(_shypFileName, false );
+        ss.writeHeader(_baseLearnerName);
         
         
 //        outputHeader();
         // The output information object
-		OutputInfo* pOutInfo = NULL;
+        OutputInfo* pOutInfo = NULL;
 
-		if ( !_outputInfoFile.empty() ) 
-		{
+        if ( !_outputInfoFile.empty() ) 
+        {
             pOutInfo = new OutputInfo(args, true);
             pOutInfo->setOutputList("sca", false, &args);
             
-			pOutInfo->initialize(pTrainingData);
+            pOutInfo->initialize(pTrainingData);
             
-			if (pTestData)
-				pOutInfo->initialize(pTestData);
-			pOutInfo->outputHeader(pTrainingData->getClassMap(), true, true, false);
+            if (pTestData)
+                pOutInfo->initialize(pTestData);
+            pOutInfo->outputHeader(pTrainingData->getClassMap(), true, true, false);
             pOutInfo->separator();
             pOutInfo->outputUserHeader("thresh");
             pOutInfo->endLine();
@@ -492,13 +493,13 @@ namespace MultiBoost {
         
         const int numExamples = pTrainingData->getNumExamples();
 
-		vector<BaseLearner*> inWeakHypotheses;
+        vector<BaseLearner*> inWeakHypotheses;
         
         if (_fullRun) {            
             // TODO : the full training is implementet, testing is needed
-			AdaBoostMHLearner* sHypothesis = new AdaBoostMHLearner();
-			sHypothesis->run(args, pTrainingData, _baseLearnerName, _numIterations, inWeakHypotheses );
-			delete sHypothesis;
+            AdaBoostMHLearner* sHypothesis = new AdaBoostMHLearner();
+            sHypothesis->run(args, pTrainingData, _baseLearnerName, _numIterations, inWeakHypotheses );
+            delete sHypothesis;
         }
         else { 
             
@@ -532,16 +533,16 @@ namespace MultiBoost {
         // init v_t (see the paper)
         initializeRejectionDistributionVector(_numIterations, rejectionDistributionVector);
 
-		if (_verbose == 1)
-			cout << "Learning in progress..." << endl;
+        if (_verbose == 1)
+            cout << "Learning in progress..." << endl;
 
-		///////////////////////////////////////////////////////////////////////
-		// Starting the SoftCascade main loop
-		///////////////////////////////////////////////////////////////////////
-		for (int t = 0; t < _numIterations; ++t)
-		{
-			if (_verbose > 0)
-				cout << "--------------[ iteration " << (t+1) << " ]--------------" << endl;
+        ///////////////////////////////////////////////////////////////////////
+        // Starting the SoftCascade main loop
+        ///////////////////////////////////////////////////////////////////////
+        for (int t = 0; t < _numIterations; ++t)
+        {
+            if (_verbose > 0)
+                cout << "--------------[ iteration " << (t+1) << " ]--------------" << endl;
 
             faceRejectionFraction += rejectionDistributionVector[t];
             
@@ -580,7 +581,7 @@ namespace MultiBoost {
                  << "\t ---> edge gap = " << bestGap << endl
                  << "\t ---> alpha = " << selectedWeakHypothesis->getAlpha() << endl;
 
-			//update the stages
+            //update the stages
             _foundHypotheses.push_back(selectedWeakHypothesis);
             updatePosteriors(pTrainingData, selectedWeakHypothesis, posteriors, _positiveLabelIndex);
             
@@ -637,38 +638,38 @@ namespace MultiBoost {
                 bootstrapTrainingSet(pTrainingData, pBootstrapData, trainingIndices);
             }
 
-		}  // loop on iterations
-		/////////////////////////////////////////////////////////
+        }  // loop on iterations
+        /////////////////////////////////////////////////////////
 
-		// write the footer of the strong hypothesis file
-		ss.writeFooter();
+        // write the footer of the strong hypothesis file
+        ss.writeFooter();
 
-		// Free the two input data objects
-		if (pTrainingData)
-			delete pTrainingData;
+        // Free the two input data objects
+        if (pTrainingData)
+            delete pTrainingData;
         if (pBootstrapData) {
             delete pBootstrapData;
         }
-		if (pTestData)
-			delete pTestData;
+        if (pTestData)
+            delete pTestData;
 
-		if (_verbose > 0)
-			cout << "Learning completed." << endl;
-	}
+        if (_verbose > 0)
+            cout << "Learning completed." << endl;
+    }
     
 #pragma mark -
 
-	// -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     
     void SoftCascadeLearner::printOutputInfo(OutputInfo* pOutInfo, int t, 
-                                            InputData* pTrainingData, InputData* pTestData, 
-                                            BaseLearner* pWeakHypothesis,
-                                            AlphaReal r)
-	{
+                                             InputData* pTrainingData, InputData* pTestData, 
+                                             BaseLearner* pWeakHypothesis,
+                                             AlphaReal r)
+    {
         pOutInfo->outputIteration(t);
         pOutInfo->outputCustom(pTrainingData, pWeakHypothesis);
 
-		if (pTestData)
+        if (pTestData)
         {
             pOutInfo->separator();
             pOutInfo->outputCustom(pTestData);    
@@ -677,11 +678,11 @@ namespace MultiBoost {
         pOutInfo->outputCurrentTime();
         pOutInfo->separator();
         pOutInfo->outputUserData(r);
-		pOutInfo->endLine();
+        pOutInfo->endLine();
 
     }
     
-	// -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     
 //    void SoftCascadeLearner::updateOutputInfo(OutputInfo* pOutInfo, 
 //                                              InputData* pData,
@@ -706,39 +707,39 @@ namespace MultiBoost {
 //        }
 //    }
     
-   	// -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     
-	void SoftCascadeLearner::classify(const nor_utils::Args& args)
-	{
+    void SoftCascadeLearner::classify(const nor_utils::Args& args)
+    {
         SoftCascadeClassifier classifier(args, _verbose);
-		
-		string testFileName = args.getValue<string>("test", 0);
-		string shypFileName = args.getValue<string>("test", 1);
-		int numIterations = args.getValue<int>("test", 2);
-		
-		string outResFileName = "";
-		if ( args.getNumValues("test") > 3 )
-			args.getValue("test", 3, outResFileName);
-		
-		classifier.run(testFileName, shypFileName, numIterations, outResFileName);
-	}
+                
+        string testFileName = args.getValue<string>("test", 0);
+        string shypFileName = args.getValue<string>("test", 1);
+        int numIterations = args.getValue<int>("test", 2);
+                
+        string outResFileName = "";
+        if ( args.getNumValues("test") > 3 )
+            args.getValue("test", 3, outResFileName);
+                
+        classifier.run(testFileName, shypFileName, numIterations, outResFileName);
+    }
 
 
-	// -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
-	void SoftCascadeLearner::doPosteriors(const nor_utils::Args& args)
-	{
+    void SoftCascadeLearner::doPosteriors(const nor_utils::Args& args)
+    {
         SoftCascadeClassifier classifier(args, _verbose);
-		string testFileName = args.getValue<string>("posteriors", 0);
-		string shypFileName = args.getValue<string>("posteriors", 1);
-		string outFileName = args.getValue<string>("posteriors", 2);
-		int numStages = args.getValue<int>("posteriors", 3);
-		
-		classifier.savePosteriors(testFileName, shypFileName, outFileName, numStages);
+        string testFileName = args.getValue<string>("posteriors", 0);
+        string shypFileName = args.getValue<string>("posteriors", 1);
+        string outFileName = args.getValue<string>("posteriors", 2);
+        int numStages = args.getValue<int>("posteriors", 3);
+                
+        classifier.savePosteriors(testFileName, shypFileName, outFileName, numStages);
 
-	}
+    }
         
-	// -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     
     void SoftCascadeLearner::outputHeader()
     {
@@ -805,7 +806,10 @@ namespace MultiBoost {
             
             int forecast = 1;
             AlphaReal posterior = 0. ;
-            vector<Label>& labels = pData->getLabels(i);
+            
+            const Example& example = pData->getExample(i);
+            int labelY = example.getLabelY(_positiveLabelIndex);
+
             int nbEvaluations = 0 ;
             
             for (int s = 0; s < _foundHypotheses.size(); ++s) {
@@ -821,7 +825,7 @@ namespace MultiBoost {
 
             scores[i].second = ( ( posterior/alphaSum ) + 1 ) / 2 ;                 
 
-            if (labels[_positiveLabelIndex].y < 0) {
+            if (labelY < 0) {
                 numWhyp += nbEvaluations;
                 scores[i].first = 0;
             }
@@ -832,13 +836,13 @@ namespace MultiBoost {
             outScores[i][0] = scores[i].second;
             outScores[i][1] = nbEvaluations;
             
-            if (forecast * labels[_positiveLabelIndex].y < 0) {
+            if (forecast * labelY < 0) {
                 err++;
             }
             
-			if (forecast > 0)
-			{
-                if (labels[_positiveLabelIndex].y > 0) {
+            if (forecast > 0)
+            {
+                if (labelY > 0) {
                     TP++;
                 }
                 else {
@@ -863,7 +867,7 @@ namespace MultiBoost {
         pData->loadIndexSet(indices);
     }
     
-	// -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
 
 } // end of namespace MultiBoost

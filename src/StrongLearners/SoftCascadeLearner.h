@@ -69,10 +69,10 @@ namespace MultiBoost {
          * The constructor.
          * \date 01/07/2011
          */
-        SoftCascadeLearner()
+    SoftCascadeLearner()
         : _numIterations(0), _verbose(1), _smallVal(1E-10),
-        _withConstantLearner(false), _sepWidth(12), _trainPosteriorsFileName(""), _testPosteriorsFileName(""), _fullRun(false), _inShypLimit(0), _outputInfoFile("") 
-        , _bootstrapRate(0), _bootstrapFileName( "" ), _alphaExponentialParameter(0.0), _targetDetectionRate(0.95) {}
+            _withConstantLearner(false), _sepWidth(12), _trainPosteriorsFileName(""), _testPosteriorsFileName(""), _fullRun(false), _inShypLimit(0), _outputInfoFile("") 
+            , _bootstrapRate(0), _bootstrapFileName( "" ), _alphaExponentialParameter(0.0), _targetDetectionRate(0.95) {}
         
         
         /**
@@ -206,19 +206,19 @@ namespace MultiBoost {
         void bootstrapTrainingSet(InputData * pData, InputData * pBootData, set<int> & indices);
 
         /**
-		 * Print output information if option --outputinfo is specified.
-		 * \date 04/07/2011
-		 */
+         * Print output information if option --outputinfo is specified.
+         * \date 04/07/2011
+         */
         void printOutputInfo(OutputInfo* pOutInfo, int t, 
-                                                 InputData* pTrainingData, InputData* pTestData, 
-                                                 BaseLearner* pWeakHypothesis,
-                                                 AlphaReal r);
+                             InputData* pTrainingData, InputData* pTestData, 
+                             BaseLearner* pWeakHypothesis,
+                             AlphaReal r);
         /**
-		 * Update the posteriors table inside OutputInfo.
+         * Update the posteriors table inside OutputInfo.
          * This design was choosen because the cascade structure 
          * necessitate a particular posterior updating.
-		 * \date 04/07/2011
-		 */
+         * \date 04/07/2011
+         */
 
 //        void updateOutputInfo(OutputInfo* pOutInfo, 
 //                                                  InputData* pData,
@@ -251,8 +251,8 @@ namespace MultiBoost {
         
         bool _withConstantLearner; //!< Check or not constant learner in each iteration 
         
-        string	_positiveLabelName; //!< The name of the face label in the input examples (provided in command line)
-        int		_positiveLabelIndex; //!< The index of the face label (\see NameMap)
+        string  _positiveLabelName; //!< The name of the face label in the input examples (provided in command line)
+        int             _positiveLabelIndex; //!< The index of the face label (\see NameMap)
         
         ofstream _output; 
         int _sepWidth;  //!< The number of spaces that separate the columns in the output file

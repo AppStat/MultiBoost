@@ -42,33 +42,33 @@
 #include "Utils/Utils.h"
 
 namespace MultiBoost {
-	
-	// -------------------------------------------------------------------------
-	
-	OutputInfo::OutputInfo(const string& outputInfoFile, bool customUpdate)
-	{
+        
+    // -------------------------------------------------------------------------
+        
+    OutputInfo::OutputInfo(const string& outputInfoFile, bool customUpdate)
+    {
         //some intializations
         _customTablesUpdate = customUpdate;
         
-		// open the stream
-		_outStream.open(outputInfoFile.c_str());
-		
-		// is it really open?
-		if ( !_outStream.is_open() )
-		{
-			cerr << "ERROR: cannot open the output steam (<" 
-			<< outputInfoFile << ">) for the step-by-step info!" << endl;
-			exit(1);
-		}
+        // open the stream
+        _outStream.open(outputInfoFile.c_str());
+                
+        // is it really open?
+        if ( !_outStream.is_open() )
+        {
+            cerr << "ERROR: cannot open the output steam (<" 
+                 << outputInfoFile << ">) for the step-by-step info!" << endl;
+            exit(1);
+        }
         
         _outputListString = defaultOutput;
         _outputList.push_back(BaseOutputInfoType::createOutput(defaultOutput));
-	}
+    }
 
     // -------------------------------------------------------------------------
-	
-	OutputInfo::OutputInfo(const string& outputInfoFile, const string & outList, bool customUpdate)
-	{
+        
+    OutputInfo::OutputInfo(const string& outputInfoFile, const string & outList, bool customUpdate)
+    {
         //internal intializations
         _customTablesUpdate = customUpdate;
         
@@ -76,22 +76,22 @@ namespace MultiBoost {
         getOutputListFromString(outList);
         
         // open the stream
-		_outStream.open(outputInfoFile.c_str());
-		
-		// is it really open?
-		if ( !_outStream.is_open() )
-		{
-			cerr << "ERROR: cannot open the output steam (<" 
-			<< outputInfoFile << ">) for the step-by-step info!" << endl;
-			exit(1);
-		}
+        _outStream.open(outputInfoFile.c_str());
+                
+        // is it really open?
+        if ( !_outStream.is_open() )
+        {
+            cerr << "ERROR: cannot open the output steam (<" 
+                 << outputInfoFile << ">) for the step-by-step info!" << endl;
+            exit(1);
+        }
         
     }
     
     // -------------------------------------------------------------------------
-	
-	OutputInfo::OutputInfo(const nor_utils::Args& args, bool customUpdate, const string & clArg)
-	{
+        
+    OutputInfo::OutputInfo(const nor_utils::Args& args, bool customUpdate, const string & clArg)
+    {
         _customTablesUpdate = customUpdate;
         
         string outputInfoFile;
@@ -111,20 +111,20 @@ namespace MultiBoost {
         }
 
         // open the stream
-		_outStream.open(outputInfoFile.c_str());
-		
-		// is it really open?
-		if ( !_outStream.is_open() )
-		{
-			cerr << "ERROR: cannot open the output steam (<" 
-			<< outputInfoFile << ">) for the step-by-step info!" << endl;
-			exit(1);
-		}
+        _outStream.open(outputInfoFile.c_str());
+                
+        // is it really open?
+        if ( !_outStream.is_open() )
+        {
+            cerr << "ERROR: cannot open the output steam (<" 
+                 << outputInfoFile << ">) for the step-by-step info!" << endl;
+            exit(1);
+        }
         
     }
 
-	// -------------------------------------------------------------------------
-	
+    // -------------------------------------------------------------------------
+        
     void OutputInfo::setOutputList(const string& list, bool append, const nor_utils::Args* args)
     {
         if (append) {
@@ -156,8 +156,8 @@ namespace MultiBoost {
     // -------------------------------------------------------------------------
     
     
-	void OutputInfo::outputHeader(const NameMap& namemap, bool outputIterations, bool outputTime, bool endline)
-	{ 
+    void OutputInfo::outputHeader(const NameMap& namemap, bool outputIterations, bool outputTime, bool endline)
+    { 
         if (outputIterations) {
             _outStream << "t" << OUTPUT_SEPARATOR;
         }        
@@ -171,8 +171,9 @@ namespace MultiBoost {
                 (*outputIt)->outputHeader(_outStream, namemap);
                 _outStream << OUTPUT_SEPARATOR;
                 
+                // because the headers hold whithin few letters, we must fill the gap
                 if (outputIt+1 != _outputList.end())
-                    _outStream << HEADER_FIELD_LENGTH;
+                    _outStream  << HEADER_FIELD_LENGTH;
             }
             if (i != numDatasets - 1) {
 //                _outStream << HEADER_FIELD_LENGTH;
@@ -188,10 +189,10 @@ namespace MultiBoost {
             _outStream << endl;
         }
 
-	}
-	
-	// -------------------------------------------------------------------------
-	
+    }
+        
+    // -------------------------------------------------------------------------
+        
     void OutputInfo::outputCustom(InputData* pData, BaseLearner* pWeakHypothesis)
     {
         if (! _customTablesUpdate) {
@@ -208,39 +209,41 @@ namespace MultiBoost {
         
     }
     
-	// -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     void OutputInfo::updateTables(InputData* pData, BaseLearner* pWeakHypothesis)
     {
-		const int numExamples = pData->getNumExamples();
-		
-		table& g = _gTableMap[pData];
+        const int numExamples = pData->getNumExamples();
+                
+        table& g = _gTableMap[pData];
         table& margins = _margins[pData];
         
-		vector<Label>::const_iterator lIt;
-		
-		// Building the strong learner (discriminant function)
-		for (int i = 0; i < numExamples; ++i)
-		{
-			const vector<Label>& labels = pData->getLabels(i);
-			
-			for (lIt = labels.begin(); lIt != labels.end(); ++lIt )
-			{
+        vector<Label>::const_iterator lIt;
+                
+        // Building the strong learner (discriminant function)
+        for (int i = 0; i < numExamples; ++i)
+        {
+            const vector<Label>& labels = pData->getLabels(i);
+                        
+            for (lIt = labels.begin(); lIt != labels.end(); ++lIt )
+            {
+                AlphaReal hx = pWeakHypothesis->getAlpha() * // alpha
+                    pWeakHypothesis->classify(pData, i, lIt->idx);
+                
                 // update the posteriors table
-				g[i][lIt->idx] += pWeakHypothesis->getAlpha() * // alpha
-				pWeakHypothesis->classify( pData, i, lIt->idx ); 
+                g[i][lIt->idx] += hx ;
                 
                 // update the margins table
                 // FIXME: redundancy 
-                margins[i][lIt->idx] += g[i][lIt->idx] * lIt->y ;
-			}
-		}
+                margins[i][lIt->idx] += hx * lIt->y ;
+            }
+        }
         
         // update the sum of alphas
         _alphaSums[pData] += pWeakHypothesis->getAlpha();
         
     }
 
-  	// -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
 
 //    void OutputInfo::updateSpecificInfo(const string& type, AlphaReal value) 
 //    {
@@ -259,29 +262,29 @@ namespace MultiBoost {
         return _outputList[position];
     }
     
-	// -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     
     void OutputInfo::outputIteration(int t)
-	{ 
-		_outStream << (t+1) << OUTPUT_SEPARATOR; // just output t
-	}
-	// -------------------------------------------------------------------------
-	
-	void OutputInfo::outputCurrentTime( void )
-	{ 
-		time_t seconds;
-		seconds = time (NULL);
-		
-		_outStream << OUTPUT_SEPARATOR << (seconds - _beginingTime); // just output current time in seconds
-	}
-	
-	// -------------------------------------------------------------------------
-	
-	void OutputInfo::initialize(InputData* pData)
-	{ 
-		_beginingTime = time( NULL );
-            int numClasses = pData->getNumClasses();
-            const int numExamples = pData->getNumExamples();
+    { 
+        _outStream << (t+1) << OUTPUT_SEPARATOR; // just output t
+    }
+    // -------------------------------------------------------------------------
+        
+    void OutputInfo::outputCurrentTime( void )
+    { 
+        time_t seconds;
+        seconds = time (NULL);
+                
+        _outStream << OUTPUT_SEPARATOR << (seconds - _beginingTime); // just output current time in seconds
+    }
+        
+    // -------------------------------------------------------------------------
+        
+    void OutputInfo::initialize(InputData* pData)
+    { 
+        _beginingTime = time( NULL );
+        int numClasses = pData->getNumClasses();
+        const int numExamples = pData->getNumExamples();
         
         table& g = _gTableMap[pData];
         
@@ -310,19 +313,19 @@ namespace MultiBoost {
         
         _alphaSums[pData] = 0;
 
-	}
-	
+    }
+        
 #pragma mark -
 #pragma mark factory method 
-    // -------------------------------------------------------------------------	
+    // -------------------------------------------------------------------------        
     // -------------------------------------------------------------------------
     
     BaseOutputInfoType* BaseOutputInfoType::createOutput(string type, const nor_utils::Args* args)
     {
-		if ( type.compare("e01") == 0 ) return new ZeroOneErrorOutput();		 // 0-1 error
-		if ( type.compare("w01") == 0 ) return new WeightedZeroOneErrorOutput(); // weighted 0-1 error
-		if ( type.compare("ham") == 0 ) return new HammingErrorOutput();		 // Hamming loss
-		if ( type.compare("wha") == 0 ) return new WeightedHammingErrorOutput();		 // Weighted Hamming loss		
+        if ( type.compare("e01") == 0 ) return new ZeroOneErrorOutput();                 // 0-1 error
+        if ( type.compare("w01") == 0 ) return new WeightedZeroOneErrorOutput(); // weighted 0-1 error
+        if ( type.compare("ham") == 0 ) return new HammingErrorOutput();                 // Hamming loss
+        if ( type.compare("wha") == 0 ) return new WeightedHammingErrorOutput();                 // Weighted Hamming loss               
         if ( type.compare("r01") == 0 ) return new RestrictedZeroOneError();     // restricted 0-1 error
         if ( type.compare("wer") == 0 ) return new WeightedErrorOutput();
         if ( type.compare("ber") == 0 ) return new BalancedErrorOutput();
@@ -340,14 +343,14 @@ namespace MultiBoost {
     }
 
 #pragma mark Subclasses 
-    // -------------------------------------------------------------------------	
-    // -------------------------------------------------------------------------	
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------        
 
     void RestrictedZeroOneError::computeAndOutput(ostream& outStream, InputData* pData, 
-                          map<InputData*, table>& gTableMap, 
-                          map<InputData*, table>& marginsTableMap, 
-                          map<InputData*, AlphaReal>& alphaSums,
-                          BaseLearner* pWeakHypothesis)
+                                                  map<InputData*, table>& gTableMap, 
+                                                  map<InputData*, table>& marginsTableMap, 
+                                                  map<InputData*, AlphaReal>& alphaSums,
+                                                  BaseLearner* pWeakHypothesis)
     {
         const int numExamples = pData->getNumExamples();
         
@@ -389,14 +392,14 @@ namespace MultiBoost {
         
     }
 
-    // -------------------------------------------------------------------------	
-	// -------------------------------------------------------------------------	
-	
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------    
+        
     void ZeroOneErrorOutput::computeAndOutput(ostream& outStream, InputData* pData, 
-											 map<InputData*, table>& gTableMap, 
-											 map<InputData*, table>& marginsTableMap, 
-											 map<InputData*, AlphaReal>& alphaSums,
-											 BaseLearner* pWeakHypothesis)
+                                              map<InputData*, table>& gTableMap, 
+                                              map<InputData*, table>& marginsTableMap, 
+                                              map<InputData*, AlphaReal>& alphaSums,
+                                              BaseLearner* pWeakHypothesis)
     {
         const int numExamples = pData->getNumExamples();
         
@@ -437,15 +440,15 @@ namespace MultiBoost {
         outStream  << (AlphaReal)(numErrors)/(AlphaReal)(numExamples);
         
     }
-		
-    // -------------------------------------------------------------------------	
-	// -------------------------------------------------------------------------	
-	
+                
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------    
+        
     void WeightedZeroOneErrorOutput::computeAndOutput(ostream& outStream, InputData* pData, 
-											  map<InputData*, table>& gTableMap, 
-											  map<InputData*, table>& marginsTableMap, 
-											  map<InputData*, AlphaReal>& alphaSums,
-											  BaseLearner* pWeakHypothesis)
+                                                      map<InputData*, table>& gTableMap, 
+                                                      map<InputData*, table>& marginsTableMap, 
+                                                      map<InputData*, AlphaReal>& alphaSums,
+                                                      BaseLearner* pWeakHypothesis)
     {
         const int numExamples = pData->getNumExamples();
         
@@ -453,11 +456,11 @@ namespace MultiBoost {
         
         vector<Label>::const_iterator lIt;
         
-		AlphaReal posWeights = 0.0;
-		AlphaReal sumWeight = 0.0;
+        AlphaReal posWeights = 0.0;
+        AlphaReal sumWeight = 0.0;
         int numErrors = 0;   
-		
-		
+                
+                
         for (int i = 0; i < numExamples; ++i)
         {
             const vector<Label>& labels = pData->getLabels(i);
@@ -467,8 +470,8 @@ namespace MultiBoost {
             // the vote of the winning positive class
             AlphaReal maxPosClass = -numeric_limits<AlphaReal>::max();
             
-			AlphaReal sumPerInstanceWeight = 0.0;
-			
+            AlphaReal sumPerInstanceWeight = 0.0;
+                        
             for ( lIt = labels.begin(); lIt != labels.end(); ++lIt )
             {
                 // get the negative winner class
@@ -478,35 +481,35 @@ namespace MultiBoost {
                 // get the positive winner class
                 if ( lIt->y > 0 && g[i][lIt->idx] > maxPosClass )
                     maxPosClass = g[i][lIt->idx];
-				
-				if ( lIt->y > 0 ) sumPerInstanceWeight += (lIt->initialWeight>0.0) ? lIt->initialWeight : -lIt->initialWeight;
+                                
+                if ( lIt->y > 0 ) sumPerInstanceWeight += (lIt->initialWeight>0.0) ? lIt->initialWeight : -lIt->initialWeight;
             }
             
             // if the vote for the worst positive label is lower than the
             // vote for the highest negative label -> error
             if (maxPosClass < maxNegClass) {
                 ++numErrors;
-			} else {
-				posWeights += sumPerInstanceWeight;
-			}
-			sumWeight += sumPerInstanceWeight;
+            } else {
+                posWeights += sumPerInstanceWeight;
+            }
+            sumWeight += sumPerInstanceWeight;
         }
         
-		// The error is normalized by the sum of positive weights
-		outStream << 1-(posWeights/sumWeight);                
+        // The error is normalized by the sum of positive weights
+        outStream << 1-(posWeights/sumWeight);                
     }
-	
-    // -------------------------------------------------------------------------	
-	// -------------------------------------------------------------------------	
-	
+        
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------    
+        
     void HammingErrorOutput::computeAndOutput(ostream& outStream, InputData* pData, 
-											  map<InputData*, table>& gTableMap, 
-											  map<InputData*, table>& marginsTableMap, 
-											  map<InputData*, AlphaReal>& alphaSums,
-											  BaseLearner* pWeakHypothesis)
+                                              map<InputData*, table>& gTableMap, 
+                                              map<InputData*, table>& marginsTableMap, 
+                                              map<InputData*, AlphaReal>& alphaSums,
+                                              BaseLearner* pWeakHypothesis)
     {
         const int numExamples = pData->getNumExamples();
-		const int numClasses = pData->getNumClasses();
+        const int numClasses = pData->getNumClasses();
         
         table& g = gTableMap[pData];
         
@@ -520,30 +523,31 @@ namespace MultiBoost {
             
             for ( lIt = labels.begin(); lIt != labels.end(); ++lIt )
             {
-				if ( g[i][lIt->idx] * lIt->y < 0 ) numErrors++;
+                if ( g[i][lIt->idx] * lIt->y < 0 ) numErrors++;
             }            
         }        
         
         // The error is normalized by the number of points
         outStream  << (AlphaReal)(numErrors)/(AlphaReal)(numExamples*numClasses);
     }
-    // -------------------------------------------------------------------------	
-	// -------------------------------------------------------------------------	
-	
+    
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------    
+        
     void WeightedHammingErrorOutput::computeAndOutput(ostream& outStream, InputData* pData, 
-											  map<InputData*, table>& gTableMap, 
-											  map<InputData*, table>& marginsTableMap, 
-											  map<InputData*, AlphaReal>& alphaSums,
-											  BaseLearner* pWeakHypothesis)
+                                                      map<InputData*, table>& gTableMap, 
+                                                      map<InputData*, table>& marginsTableMap, 
+                                                      map<InputData*, AlphaReal>& alphaSums,
+                                                      BaseLearner* pWeakHypothesis)
     {
-        const int numExamples = pData->getNumExamples();		
+        const int numExamples = pData->getNumExamples();
         
         table& g = gTableMap[pData];
         
         vector<Label>::const_iterator lIt;
         
         AlphaReal negWeights = 0.0;   
-		AlphaReal sumWeights = 0.0;   
+        AlphaReal sumWeights = 0.0;   
         
         for (int i = 0; i < numExamples; ++i)
         {
@@ -551,10 +555,10 @@ namespace MultiBoost {
             
             for ( lIt = labels.begin(); lIt != labels.end(); ++lIt )
             {
-				if ( g[i][lIt->idx] * lIt->y < 0 ) {
-					negWeights += lIt->initialWeight;
-				}
-				sumWeights += lIt->initialWeight;
+                if ( g[i][lIt->idx] * lIt->y < 0 ) {
+                    negWeights += lIt->initialWeight;
+                }
+                sumWeights += lIt->initialWeight;
             }            
         }
         
@@ -563,67 +567,65 @@ namespace MultiBoost {
         outStream  << (negWeights/sumWeights);
         
     }
-	
-	
-	
-    // -------------------------------------------------------------------------	
-    // -------------------------------------------------------------------------	
+        
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------        
 
     void WeightedErrorOutput::computeAndOutput(ostream& outStream, InputData* pData, 
-                                           map<InputData*, table>& gTableMap, 
-                                           map<InputData*, table>& marginsTableMap, 
-                                           map<InputData*, AlphaReal>& alphaSums,
-                                           BaseLearner* pWeakHypothesis)
+                                               map<InputData*, table>& gTableMap, 
+                                               map<InputData*, table>& marginsTableMap, 
+                                               map<InputData*, AlphaReal>& alphaSums,
+                                               BaseLearner* pWeakHypothesis)
     {
         int numClasses = pData->getNumClasses();
-		const int numExamples = pData->getNumExamples();
-		
-		table& g = gTableMap[pData];
-		vector<Label>::const_iterator lIt;
-		
-		AlphaReal posWeights = 0.0;
-		AlphaReal sumWeight = 0;
-		int numErrors = 0;   
-		
-		for (int i = 0; i < numExamples; ++i)
-		{
-			const vector<Label>& labels = pData->getLabels(i);
-			
-			// the vote of the winning negative class
-			AlphaReal maxNegClass = -numeric_limits<AlphaReal>::max();
-			// the vote of the winning positive class
-			AlphaReal minPosClass = numeric_limits<AlphaReal>::max();
-			
-			AlphaReal sumPerInstanceWeight = 0.0;
-			
-			for ( lIt = labels.begin(); lIt != labels.end(); ++lIt )
-			{
-				// get the negative winner class
-				if ( lIt->y < 0 && g[i][lIt->idx] > maxNegClass )
-					maxNegClass = g[i][lIt->idx];
-				
-				// get the positive winner class
-				if ( lIt->y > 0 && g[i][lIt->idx] < minPosClass )
-					minPosClass = g[i][lIt->idx];
+        const int numExamples = pData->getNumExamples();
+                
+        table& g = gTableMap[pData];
+        vector<Label>::const_iterator lIt;
+                
+        AlphaReal posWeights = 0.0;
+        AlphaReal sumWeight = 0;
+        int numErrors = 0;   
+                
+        for (int i = 0; i < numExamples; ++i)
+        {
+            const vector<Label>& labels = pData->getLabels(i);
+                        
+            // the vote of the winning negative class
+            AlphaReal maxNegClass = -numeric_limits<AlphaReal>::max();
+            // the vote of the winning positive class
+            AlphaReal minPosClass = numeric_limits<AlphaReal>::max();
+                        
+            AlphaReal sumPerInstanceWeight = 0.0;
+                        
+            for ( lIt = labels.begin(); lIt != labels.end(); ++lIt )
+            {
+                // get the negative winner class
+                if ( lIt->y < 0 && g[i][lIt->idx] > maxNegClass )
+                    maxNegClass = g[i][lIt->idx];
+                                
+                // get the positive winner class
+                if ( lIt->y > 0 && g[i][lIt->idx] < minPosClass )
+                    minPosClass = g[i][lIt->idx];
 
-				sumPerInstanceWeight += (lIt->initialWeight>0.0) ? lIt->initialWeight : -lIt->initialWeight;
-			}
-			
-			// if the vote for the worst positive label is lower than the
-			// vote for the highest negative label -> error
-			if (minPosClass <= maxNegClass) {
-				++numErrors; // just indicating that there is missclassification in this case				
-			} else {
-				posWeights += sumPerInstanceWeight;
-			}
-			sumWeight += sumPerInstanceWeight;
-		}
-		// The error is normalized by the sum of positive weights
-		outStream << 1-(posWeights/sumWeight);
+                sumPerInstanceWeight += (lIt->initialWeight>0.0) ? lIt->initialWeight : -lIt->initialWeight;
+            }
+                        
+            // if the vote for the worst positive label is lower than the
+            // vote for the highest negative label -> error
+            if (minPosClass <= maxNegClass) {
+                ++numErrors; // just indicating that there is missclassification in this case                           
+            } else {
+                posWeights += sumPerInstanceWeight;
+            }
+            sumWeight += sumPerInstanceWeight;
+        }
+        // The error is normalized by the sum of positive weights
+        outStream << 1-(posWeights/sumWeight);
     }
 
-    // -------------------------------------------------------------------------	
-    // -------------------------------------------------------------------------	
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------        
 
     void BalancedErrorOutput::computeAndOutput(ostream& outStream, InputData* pData, 
                                                map<InputData*, table>& gTableMap, 
@@ -663,9 +665,9 @@ namespace MultiBoost {
                 if ( lIt->y < 0 && g[i][lIt->idx] > maxNegClass )
                     maxNegClass = g[i][lIt->idx];
                     
-                    // get the positive winner class
-                    if ( lIt->y > 0 && g[i][lIt->idx] < minPosClass )
-                        minPosClass = g[i][lIt->idx];
+                // get the positive winner class
+                if ( lIt->y > 0 && g[i][lIt->idx] < minPosClass )
+                    minPosClass = g[i][lIt->idx];
             }
             
             // if the vote for the worst positive label is higher than the
@@ -696,306 +698,287 @@ namespace MultiBoost {
         outStream << bACC;
         
         for( int i = 0; i < numClasses; i++ ) {
-            outStream << bacPerClass[i];
+            outStream << OUTPUT_SEPARATOR << bacPerClass[i];
         }
     }
     
-    // -------------------------------------------------------------------------	
-    // -------------------------------------------------------------------------	
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------        
 
     void MAEOuput::computeAndOutput(ostream& outStream, InputData* pData, 
-                                               map<InputData*, table>& gTableMap, 
-                                               map<InputData*, table>& marginsTableMap,
-                                               map<InputData*, AlphaReal>& alphaSums,
-                                               BaseLearner* pWeakHypothesis)
-	{
-		const int numExamples = pData->getNumExamples();
-		
-		table& g = gTableMap[pData];
-		vector<Label>::const_iterator lIt,maxlIt,truelIt;
-		AlphaReal maxDiscriminant,mae = 0.0,mse = 0.0,tmpVal;
-		char maxLabel;
-		
-		// Get label values: they must be convertible to AlphaReal
-		vector<AlphaReal> labelValues;
-		NameMap classMap = pData->getClassMap();
-		for (int l = 0;l < classMap.getNumNames(); ++l)
-			labelValues.push_back(atof(classMap.getNameFromIdx(l).c_str()));
-		
-		// Building the strong learner (discriminant function)
-		for (int i = 0; i < numExamples; ++i){
-			const vector<Label>& labels = pData->getLabels(i);
-			maxDiscriminant = -numeric_limits<AlphaReal>::max();
-			maxLabel = -100;
-			
-			for (lIt = labels.begin(); lIt != labels.end(); ++lIt ) {
-				if ( g[i][lIt->idx] > maxDiscriminant ) {
-					maxDiscriminant = g[i][lIt->idx];
-					maxlIt = lIt;
-				}
-				if ( lIt->y > maxLabel ) {
-					maxLabel = lIt->y;
-					truelIt = lIt;
-				}	 
-			}
-			tmpVal = labelValues[truelIt->idx] - labelValues[maxlIt->idx];
-			mae += fabs(tmpVal);				      
-			mse += tmpVal * tmpVal;				      
-		}
-		
-		outStream << mae/(AlphaReal)(numExamples) << OUTPUT_SEPARATOR << sqrt(mse/(AlphaReal)(numExamples));
-		
-	}
+                                    map<InputData*, table>& gTableMap, 
+                                    map<InputData*, table>& marginsTableMap,
+                                    map<InputData*, AlphaReal>& alphaSums,
+                                    BaseLearner* pWeakHypothesis)
+    {
+        const int numExamples = pData->getNumExamples();
+                
+        table& g = gTableMap[pData];
+        vector<Label>::const_iterator lIt,maxlIt,truelIt;
+        AlphaReal maxDiscriminant,mae = 0.0,mse = 0.0,tmpVal;
+        char maxLabel;
+                
+        // Get label values: they must be convertible to AlphaReal
+        vector<AlphaReal> labelValues;
+        NameMap classMap = pData->getClassMap();
+        for (int l = 0;l < classMap.getNumNames(); ++l)
+            labelValues.push_back(atof(classMap.getNameFromIdx(l).c_str()));
+                
+        // Building the strong learner (discriminant function)
+        for (int i = 0; i < numExamples; ++i){
+            const vector<Label>& labels = pData->getLabels(i);
+            maxDiscriminant = -numeric_limits<AlphaReal>::max();
+            maxLabel = -100;
+                        
+            for (lIt = labels.begin(); lIt != labels.end(); ++lIt ) {
+                if ( g[i][lIt->idx] > maxDiscriminant ) {
+                    maxDiscriminant = g[i][lIt->idx];
+                    maxlIt = lIt;
+                }
+                if ( lIt->y > maxLabel ) {
+                    maxLabel = lIt->y;
+                    truelIt = lIt;
+                }        
+            }
+            tmpVal = labelValues[truelIt->idx] - labelValues[maxlIt->idx];
+            mae += fabs(tmpVal);                                  
+            mse += tmpVal * tmpVal;                               
+        }
+                
+        outStream << mae/(AlphaReal)(numExamples) << OUTPUT_SEPARATOR << sqrt(mse/(AlphaReal)(numExamples));
+                
+    }
     
-    // -------------------------------------------------------------------------	
-    // -------------------------------------------------------------------------	
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------        
 
     void MarginsOutput::computeAndOutput(ostream& outStream, InputData* pData, 
-                                               map<InputData*, table>& gTableMap, 
-                                               map<InputData*, table>& marginsTableMap, 
-                                               map<InputData*, AlphaReal>& alphaSums,
-                                               BaseLearner* pWeakHypothesis)
-	{
-		int numClasses = pData->getNumClasses();
-		const int numExamples = pData->getNumExamples();
-		
-		//    to be continued: single/dense/sparse
-		
-		table& margins = marginsTableMap[pData];
-		
-		AlphaReal minMargin = numeric_limits<AlphaReal>::max();
-		AlphaReal belowZeroMargin = 0;                        
-		
-		// for each example
-		for (int i = 0; i < numExamples; ++i)
-		{
-			vector<Label>& labels = pData->getLabels(i);
-			vector<Label>::iterator lIt;
-			
-			for (lIt = labels.begin(); lIt != labels.end(); ++lIt )
-			{
-				AlphaReal hy =  pWeakHypothesis->classify(pData, i, lIt->idx) * // h_l(x_i)
-				lIt->y; // y
-				
-				// compute the margin
-				margins[i][lIt->idx] += pWeakHypothesis->getAlpha() * hy;
-				
-				// gets the margin below zero
-#ifdef NOTIWEIGHT
-				if ( margins[i][lIt->idx] < 0 )
-					belowZeroMargin += lIt->weight;
-#else
-				if ( margins[i][lIt->idx] < 0 )
-					belowZeroMargin += lIt->initialWeight;
-#endif
-				
-				// get the minimum margin among classes and examples
-				if (margins[i][lIt->idx] < minMargin)
-					minMargin = margins[i][lIt->idx];
-			}
-		}	
-		
-		outStream << minMargin / alphaSums[pData] << OUTPUT_SEPARATOR // minimum margin
-                  << belowZeroMargin; // margins that are below zero
-	}
-	
-    // -------------------------------------------------------------------------	
-    // -------------------------------------------------------------------------	
+                                         map<InputData*, table>& gTableMap, 
+                                         map<InputData*, table>& marginsTableMap, 
+                                         map<InputData*, AlphaReal>& alphaSums,
+                                         BaseLearner* pWeakHypothesis)
+    {
+        const int numExamples = pData->getNumExamples();
+                
+        //    to be continued: single/dense/sparse                
+        table& margins = marginsTableMap[pData];
+                
+        AlphaReal minMargin = numeric_limits<AlphaReal>::max();
+        
+        // for each example
+        for (int i = 0; i < numExamples; ++i)
+        {
+            vector<Label>& labels = pData->getLabels(i);
+            vector<Label>::iterator lIt;
+                        
+            for (lIt = labels.begin(); lIt != labels.end(); ++lIt )
+            {
+                // get the minimum margin among classes and examples
+                if (margins[i][lIt->idx] < minMargin)
+                    minMargin = margins[i][lIt->idx];
+            }
+        }       
+                
+        outStream << minMargin / alphaSums[pData] ;
+    }
+        
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------        
 
     void EdgeOutput::computeAndOutput(ostream& outStream, InputData* pData, 
-                                               map<InputData*, table>& gTableMap, 
-                                               map<InputData*, table>& marginsTableMap, 
-                                               map<InputData*, AlphaReal>& alphaSums,
-                                               BaseLearner* pWeakHypothesis)
-	{
-		const int numExamples = pData->getNumExamples();
-		
-		AlphaReal gamma = 0; // the edge
-		// for each example
-		for (int i = 0; i < numExamples; ++i)
-		{
-			vector<Label>& labels = pData->getLabels(i);
-			vector<Label>::iterator lIt;
-			
-			for (lIt = labels.begin(); lIt != labels.end(); ++lIt )
-			{
-				AlphaReal hy = pWeakHypothesis->classify(pData, i, lIt->idx) * // h_l(x_i)
-				lIt->y;
-				gamma += lIt->weight * hy;
-			}
-		}
-		
-		outStream << gamma; // edge
-		
-	}
-	
-    // -------------------------------------------------------------------------	
-    // -------------------------------------------------------------------------	
+                                      map<InputData*, table>& gTableMap, 
+                                      map<InputData*, table>& marginsTableMap, 
+                                      map<InputData*, AlphaReal>& alphaSums,
+                                      BaseLearner* pWeakHypothesis)
+    {
+        const int numExamples = pData->getNumExamples();
+                
+        AlphaReal gamma = 0; // the edge
+        // for each example
+        for (int i = 0; i < numExamples; ++i)
+        {
+            vector<Label>& labels = pData->getLabels(i);
+            vector<Label>::iterator lIt;
+                        
+            for (lIt = labels.begin(); lIt != labels.end(); ++lIt )
+            {
+                AlphaReal hy = pWeakHypothesis->classify(pData, i, lIt->idx) * // h_l(x_i)
+                    lIt->y;
+                gamma += lIt->weight * hy;
+            }
+        }
+                
+        outStream << gamma; // edge
+                
+    }
+        
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------        
 
     void AUCOutput::computeAndOutput(ostream& outStream, InputData* pData, 
-                                               map<InputData*, table>& gTableMap, 
-                                               map<InputData*, table>& marginsTableMap, 
-                                               map<InputData*, AlphaReal>& alphaSums,
-                                               BaseLearner* pWeakHypothesis)
-	{
-		const int numClasses = pData->getNumClasses();
-		const int numExamples = pData->getNumExamples();
-		
-		vector< int > fp( numClasses );   
-		fill( fp.begin(), fp.end(), 0 );
-		
-		table& g = gTableMap[pData];
-		vector<Label>::const_iterator lIt;
-		
-		vector< pair< int, AlphaReal > > data( numExamples );
-		
-		vector< double > ROCscores( numClasses );
-		fill( ROCscores.begin(), ROCscores.end(), 0.0 );
-		double ROCsum = 0.0;
-		
-		for( int i=0; i < numClasses; i++ ) {
-			if ( 0 < pData->getNumExamplesPerClass( i ) ) {
-				
-				//fill( labels.begin(), labels.end(), 0 );
-				AlphaReal mn = numeric_limits< AlphaReal >::max();
-				AlphaReal mx = numeric_limits< AlphaReal >::min();
-				
-				
-				
-				for( int j = 0; j < numExamples; j++ ) {
-					data[j].second = g[j][i];
-					
-					if ( mn > data[j].second ) mn = data[j].second;
-					if ( mx < data[j].second ) mx = data[j].second;					
-					
-					if ( pData->hasPositiveLabel( j, i ) ) data[j].first = 1;
-					else data[j].first = 0;
-				}
-				
-				mx -= mn;
-				if ( mx > numeric_limits<AlphaReal>::epsilon() ) {
-					for( int j = 0; j < numExamples; j++ ) {
-						data[j].second -= mn;
-						data[j].second /= mx; 
-					}
-				}
-				
-				ROCscores[i] = nor_utils::getROC( data );
-			} else {
-				ROCscores[i] = 0.0;
-			}
-			
-			ROCsum += ROCscores[i];
-		}
-		ROCsum /= (double) numClasses;
-		
-		outStream << ROCsum; // mean of AUC
-		for( int i=0; i < numClasses; i++ ) {
-			outStream << OUTPUT_SEPARATOR << ROCscores[i];
-		}
-		
-	}
-	
-    // -------------------------------------------------------------------------	
-    // -------------------------------------------------------------------------	
+                                     map<InputData*, table>& gTableMap, 
+                                     map<InputData*, table>& marginsTableMap, 
+                                     map<InputData*, AlphaReal>& alphaSums,
+                                     BaseLearner* pWeakHypothesis)
+    {
+        const int numClasses = pData->getNumClasses();
+        const int numExamples = pData->getNumExamples();
+                
+        vector< int > fp( numClasses );   
+        fill( fp.begin(), fp.end(), 0 );
+                
+        table& g = gTableMap[pData];
+        vector<Label>::const_iterator lIt;
+                
+        vector< pair< int, AlphaReal > > data( numExamples );
+                
+        vector< double > ROCscores( numClasses );
+        fill( ROCscores.begin(), ROCscores.end(), 0.0 );
+        double ROCsum = 0.0;
+                
+        for( int i=0; i < numClasses; i++ ) {
+            if ( 0 < pData->getNumExamplesPerClass( i ) ) {
+                                
+                //fill( labels.begin(), labels.end(), 0 );
+                AlphaReal mn = numeric_limits< AlphaReal >::max();
+                AlphaReal mx = numeric_limits< AlphaReal >::min();
+                                
+                                
+                                
+                for( int j = 0; j < numExamples; j++ ) {
+                    data[j].second = g[j][i];
+                                        
+                    if ( mn > data[j].second ) mn = data[j].second;
+                    if ( mx < data[j].second ) mx = data[j].second;                                 
+                                        
+                    if ( pData->hasPositiveLabel( j, i ) ) data[j].first = 1;
+                    else data[j].first = 0;
+                }
+                                
+                mx -= mn;
+                if ( mx > numeric_limits<AlphaReal>::epsilon() ) {
+                    for( int j = 0; j < numExamples; j++ ) {
+                        data[j].second -= mn;
+                        data[j].second /= mx; 
+                    }
+                }
+                                
+                ROCscores[i] = nor_utils::getROC( data );
+            } else {
+                ROCscores[i] = 0.0;
+            }
+                        
+            ROCsum += ROCscores[i];
+        }
+        ROCsum /= (double) numClasses;
+                
+        outStream << ROCsum; // mean of AUC
+        for( int i=0; i < numClasses; i++ ) {
+            outStream << OUTPUT_SEPARATOR << ROCscores[i];
+        }
+                
+    }
+        
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------        
 
     void TPRFPROutput::computeAndOutput(ostream& outStream, InputData* pData, 
-                                               map<InputData*, table>& gTableMap, 
-                                               map<InputData*, table>& marginsTableMap, 
-                                               map<InputData*, AlphaReal>& alphaSums,
-                                               BaseLearner* pWeakHypothesis)
+                                        map<InputData*, table>& gTableMap, 
+                                        map<InputData*, table>& marginsTableMap, 
+                                        map<InputData*, AlphaReal>& alphaSums,
+                                        BaseLearner* pWeakHypothesis)
 
- 	{
-		int numClasses = pData->getNumClasses();
-		const int numExamples = pData->getNumExamples();
-		
-		table& g = gTableMap[pData];
-		
-		vector<int> origLabels(numExamples);
-		vector<int> forecastedLabels(numExamples);
-		
-		for (int i = 0; i < numExamples; ++i)
-		{
-			const vector<Label>& labels = pData->getLabels(i);
-			
-			vector<Label>::const_iterator lIt;
-			
-			// the vote of the winning negative class
-			AlphaReal maxClass = -numeric_limits<AlphaReal>::max();
-			
-			for ( lIt = labels.begin(); lIt != labels.end(); ++lIt )
-			{
-				// get the negative winner class
-				if ( g[i][lIt->idx] > maxClass )
-				{
-					forecastedLabels[i]=lIt->idx;
-					maxClass = g[i][lIt->idx];
-				}
-				
-				// get the positive winner class
-				if ( lIt->y > 0 )
-				{
-					origLabels[i]=lIt->idx;
-				}
-			}						
-		}
-		
-		vector<double> TPR(numClasses);
-		vector<double> FPR(numClasses);
-		
-		vector<int> TP(numClasses);
-		vector<int> FP(numClasses);
-		
-		vector<int> classDistr(numClasses);
-		
-		fill( classDistr.begin(), classDistr.end(), 0 );
-		fill( TP.begin(), TP.end(), 0 );
-		fill( FP.begin(), FP.end(), 0 );
-		
-		for (int i = 0; i < numExamples; ++i)
-		{
-			classDistr[origLabels[i]]++;
-			
-			if (origLabels[i]==forecastedLabels[i]) // True positive
-			{
-				TP[origLabels[i]]++;
-			} else {
-				FP[forecastedLabels[i]]++;
-			}			
-		}		
-		
-		double avgTPR = 0.0, avgFPR = 0.0;
-		// print
-		for( int l=0; l<numClasses; ++l ) {
-			TPR[l] = TP[l]/((double)classDistr[l]);
-			FPR[l] = FP[l]/((double)(numExamples-classDistr[l]));
-			
-			avgTPR += TPR[l];
-			avgFPR += FPR[l];
-		}
-		
-		avgTPR /= numClasses;
-		avgFPR /= numClasses;
-		
-		outStream << avgTPR; // mean of TPR
-		for( int i=0; i < numClasses; i++ ) {
-			outStream << OUTPUT_SEPARATOR << TPR[i];
-		}
-		
-		outStream << OUTPUT_SEPARATOR << avgFPR; // mean of FPR
-		for( int i=0; i < numClasses; i++ ) {
-			outStream << OUTPUT_SEPARATOR << FPR[i];
-		}				
-	}
+    {
+        int numClasses = pData->getNumClasses();
+        const int numExamples = pData->getNumExamples();
+                
+        table& g = gTableMap[pData];
+                
+        vector<int> origLabels(numExamples);
+        vector<int> forecastedLabels(numExamples);
+                
+        for (int i = 0; i < numExamples; ++i)
+        {
+            const vector<Label>& labels = pData->getLabels(i);
+                        
+            vector<Label>::const_iterator lIt;
+                        
+            // the vote of the winning negative class
+            AlphaReal maxClass = -numeric_limits<AlphaReal>::max();
+                        
+            for ( lIt = labels.begin(); lIt != labels.end(); ++lIt )
+            {
+                // get the negative winner class
+                if ( g[i][lIt->idx] > maxClass )
+                {
+                    forecastedLabels[i]=lIt->idx;
+                    maxClass = g[i][lIt->idx];
+                }
+                                
+                // get the positive winner class
+                if ( lIt->y > 0 )
+                {
+                    origLabels[i]=lIt->idx;
+                }
+            }                                               
+        }
+                
+        vector<double> TPR(numClasses);
+        vector<double> FPR(numClasses);
+                
+        vector<int> TP(numClasses);
+        vector<int> FP(numClasses);
+                
+        vector<int> classDistr(numClasses);
+                
+        fill( classDistr.begin(), classDistr.end(), 0 );
+        fill( TP.begin(), TP.end(), 0 );
+        fill( FP.begin(), FP.end(), 0 );
+                
+        for (int i = 0; i < numExamples; ++i)
+        {
+            classDistr[origLabels[i]]++;
+                        
+            if (origLabels[i]==forecastedLabels[i]) // True positive
+            {
+                TP[origLabels[i]]++;
+            } else {
+                FP[forecastedLabels[i]]++;
+            }                       
+        }               
+                
+        double avgTPR = 0.0, avgFPR = 0.0;
+        // print
+        for( int l=0; l<numClasses; ++l ) {
+            TPR[l] = TP[l]/((double)classDistr[l]);
+            FPR[l] = FP[l]/((double)(numExamples-classDistr[l]));
+                        
+            avgTPR += TPR[l];
+            avgFPR += FPR[l];
+        }
+                
+        avgTPR /= numClasses;
+        avgFPR /= numClasses;
+                
+        outStream << avgTPR; // mean of TPR
+        for( int i=0; i < numClasses; i++ ) {
+            outStream << OUTPUT_SEPARATOR << TPR[i];
+        }
+                
+        outStream << OUTPUT_SEPARATOR << avgFPR; // mean of FPR
+        for( int i=0; i < numClasses; i++ ) {
+            outStream << OUTPUT_SEPARATOR << FPR[i];
+        }                               
+    }
 
-    // -------------------------------------------------------------------------	
-    // -------------------------------------------------------------------------	
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------        
     
     void SoftCascadeOutput::computeAndOutput(ostream& outStream, InputData* pData, 
-                          map<InputData*, table>& gTableMap, 
-                          map<InputData*, table>& marginsTableMap, 
-                          map<InputData*, AlphaReal>& alphaSums,
-                                           BaseLearner* pWeakHypothesis) {
+                                             map<InputData*, table>& gTableMap, 
+                                             map<InputData*, table>& marginsTableMap, 
+                                             map<InputData*, AlphaReal>& alphaSums,
+                                             BaseLearner* pWeakHypothesis) {
         set<int> indices ;
         pData->getIndexSet(indices);
         pData->clearIndexSet();
@@ -1007,7 +990,7 @@ namespace MultiBoost {
         //resize in case of bootstrapping
         const int newDimension = pData->getNumExamples();
         const int numClasses = pData->getNumClasses();
-        const int oldDimension = g.size();
+        const int oldDimension = (int)g.size();
         
         assert(newDimension >= oldDimension);
         g.resize(newDimension);
@@ -1050,7 +1033,10 @@ namespace MultiBoost {
             _forecast[i] = 1;
             
             AlphaReal posterior = 0. ;
-            vector<Label>& labels = pData->getLabels(i);
+            
+            const Example& example = pData->getExample(i);
+            int labelY = example.getLabelY(positiveLabelIndex);
+
             int nbEvaluations = 0 ;
             
             for (int s = 0; s < _calibratedWeakHypotheses.size(); ++s) {
@@ -1065,10 +1051,10 @@ namespace MultiBoost {
             }
             
             // update the g table
-//            vector<Label>::const_iterator lIt;			
-//			for ( lIt = labels.begin(); lIt != labels.end(); ++lIt )
-//			{
-//				g[i][lIt->idx] = posterior;
+//            vector<Label>::const_iterator lIt;                        
+//                      for ( lIt = labels.begin(); lIt != labels.end(); ++lIt )
+//                      {
+//                              g[i][lIt->idx] = posterior;
 //            }
 //instead
             g[i][positiveLabelIndex] = posterior;
@@ -1076,7 +1062,7 @@ namespace MultiBoost {
             
             scores[i].second = ( ( posterior/alphaSum ) + 1 ) / 2 ;                 
             
-            if (labels[positiveLabelIndex].y < 0) {
+            if (labelY < 0) {
                 numWhyp += nbEvaluations;
                 scores[i].first = 0;
             }
@@ -1087,13 +1073,13 @@ namespace MultiBoost {
 //            outScores[i][0] = scores[i].second;
 //            outScores[i][1] = nbEvaluations;
             
-            if (_forecast[i] * labels[positiveLabelIndex].y < 0) {
+            if (_forecast[i] * labelY < 0) {
                 err++;
             }
             
-			if (_forecast[i] > 0)
-			{
-                if (labels[positiveLabelIndex].y > 0) {
+            if (_forecast[i] > 0)
+            {
+                if (labelY > 0) {
                     TP++;
                 }
                 else {
@@ -1109,7 +1095,7 @@ namespace MultiBoost {
         
         double rocScore = nor_utils::getROC( scores );  
         
-        outStream << OUTPUT_SEPARATOR << errRate;
+        outStream << errRate;
         outStream << OUTPUT_SEPARATOR << rocScore;
         outStream << OUTPUT_SEPARATOR << fpRate;
         outStream << OUTPUT_SEPARATOR << tpRate;
@@ -1119,14 +1105,14 @@ namespace MultiBoost {
         
     }
     
-    // -------------------------------------------------------------------------	
-    // -------------------------------------------------------------------------	
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------        
 
     void PosteriorsOutput::computeAndOutput(ostream& outStream, InputData* pData, 
-                          map<InputData*, table>& gTableMap, 
-                          map<InputData*, table>& marginsTableMap, 
-                          map<InputData*, AlphaReal>& alphaSums,
-                          BaseLearner* pWeakHypothesis)
+                                            map<InputData*, table>& gTableMap, 
+                                            map<InputData*, table>& marginsTableMap, 
+                                            map<InputData*, AlphaReal>& alphaSums,
+                                            BaseLearner* pWeakHypothesis)
     {
         const int numExamples = pData->getNumExamples();
         
@@ -1146,7 +1132,7 @@ namespace MultiBoost {
         }
     }
     
-    // -------------------------------------------------------------------------	
-    // -------------------------------------------------------------------------	
+    // -------------------------------------------------------------------------        
+    // -------------------------------------------------------------------------        
 
 } // end of namespace MultiBoost

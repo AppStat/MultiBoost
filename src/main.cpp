@@ -43,7 +43,6 @@
  * Further base learners and strong learners following the boosting paradigm can be easily implemented in a flexible framework.
  * Feel free to use it and to modify it!
  *
- * Copyright (C) 2005 Djalel Benbouzid, Robert Busa-Fekete, Norman Casagrande, Francois-David Collin, Balazs Kegl.
  * This software is covered by the 
  * <a href="http://www.gnu.org/copyleft/lesser.html">LGPL</a> licence.
  *
@@ -116,11 +115,13 @@
  * 
  * Here's the \b bibtex reference:
  \verbatim
- @misc{multiboost,
- author   = {Norman Casagrande and Bal\'{a}zs K\'{e}gl},
- title    = {MultiBoost: An open source multi-class AdaBoost learner},
- note     = {http://www.iro.umontreal.ca/~casagran/multiboost.html},
- year     = {2005-2006}
+ @article{multiboost,
+ title={Multiboost: a multi-purpose boosting package},
+ author={Benbouzid, D. and Busa-Fekete, R. and Casagrande, N. and Collin, F.D. and K{\'e}gl, B.},
+ journal={Journal of Machine Learning Research},
+ volume={13},
+ pages={549--553},
+ year={2012}
  }\endverbatim
  *
  */
@@ -151,6 +152,7 @@
 #include "StrongLearners/AdaBoostMHLearner.h" // for --encode
 #include "StrongLearners/SoftCascadeLearner.h" // for declareBaseArguments
 #include "StrongLearners/VJCascadeLearner.h" // for declareBaseArguments
+#include "StrongLearners/ArcGVLearner.h" // for declareBaseArguments
 
 #include "IO/OutputInfo.h" // for --encode
 #include "Bandits/GenericBanditAlgorithm.h" 
@@ -159,7 +161,7 @@ using namespace std;
 using namespace MultiBoost;
 
 
-static const char CURRENT_VERSION[] = "1.1.04";
+static const char CURRENT_VERSION[] = "1.1.05";
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -174,12 +176,12 @@ static const char CURRENT_VERSION[] = "1.1.04";
  */
 void checkBaseLearner(const string& baseLearnerName)
 {
-	if ( !BaseLearner::RegisteredLearners().hasLearner(baseLearnerName) )
-	{
-		// Not found in the registered!
-		cerr << "ERROR: learner <" << baseLearnerName << "> not found in the registered learners!" << endl;
-		exit(1);
-	}
+    if ( !BaseLearner::RegisteredLearners().hasLearner(baseLearnerName) )
+    {
+        // Not found in the registered!
+        cerr << "ERROR: learner <" << baseLearnerName << "> not found in the registered learners!" << endl;
+        exit(1);
+    }
 }
 
 //---------------------------------------------------------------------------
@@ -190,12 +192,12 @@ void checkBaseLearner(const string& baseLearnerName)
  */
 void showBase()
 {
-	cout << "MultiBoost (v" << CURRENT_VERSION << "). A multi-purpose, multi-class boosting package." << endl;
-	cout << "---------------------------------------------------------------------------" << endl;
-	cout << "Build: " << __DATE__ << " (" << __TIME__ << ") (C) multiboost.org" << endl << endl;
-	cout << "===> Type --help for help or --static to show the static options" << endl;
-	
-	exit(0);
+    cout << "MultiBoost (v" << CURRENT_VERSION << "). A multi-purpose, multi-class boosting package." << endl;
+    cout << "---------------------------------------------------------------------------" << endl;
+    cout << "Build: " << __DATE__ << " (" << __TIME__ << ") (C) multiboost.org" << endl << endl;
+    cout << "===> Type --help for help or --static to show the static options" << endl;
+        
+    exit(0);
 }
 
 //---------------------------------------------------------------------------
@@ -206,28 +208,28 @@ void showBase()
  */
 void showHelp(nor_utils::Args& args, const vector<string>& learnersList)
 {
-	cout << "MultiBoost (v" << CURRENT_VERSION << "). An obvious name for a multi-class AdaBoost learner." << endl;
-	cout << "------------------------ HELP SECTION --------------------------" << endl;
-	
-	args.printGroup("Parameters");
-	
-	cout << endl;
-	cout << "For specific help options type:" << endl;
-	cout << "   --h general: General options" << endl;
-	cout << "   --h io: I/O options" << endl;
-	cout << "   --h algo: Basic algorithm options" << endl;
-	cout << "   --h bandits: Bandit algorithm options" << endl;
-	cout << "   --h vjcascade: Viola-Jones Cascade options" << endl;
-	cout << "   --h softcascade: Soft Cascade options" << endl;
+    cout << "MultiBoost (v" << CURRENT_VERSION << "). An obvious name for a multi-class AdaBoost learner." << endl;
+    cout << "------------------------ HELP SECTION --------------------------" << endl;
+        
+    args.printGroup("Parameters");
+        
+    cout << endl;
+    cout << "For specific help options type:" << endl;
+    cout << "   --h general: General options" << endl;
+    cout << "   --h io: I/O options" << endl;
+    cout << "   --h algo: Basic algorithm options" << endl;
+    cout << "   --h bandits: Bandit algorithm options" << endl;
+    cout << "   --h vjcascade: Viola-Jones Cascade options" << endl;
+    cout << "   --h softcascade: Soft Cascade options" << endl;
 
-	cout << endl;
-	cout << "For weak learners specific options type:" << endl;
-	
-	vector<string>::const_iterator it;
-	for (it = learnersList.begin(); it != learnersList.end(); ++it)
-		cout << "   --h " << *it << endl;
-	
-	exit(0);
+    cout << endl;
+    cout << "For weak learners specific options type:" << endl;
+        
+    vector<string>::const_iterator it;
+    for (it = learnersList.begin(); it != learnersList.end(); ++it)
+        cout << "   --h " << *it << endl;
+        
+    exit(0);
 }
 
 //---------------------------------------------------------------------------
@@ -239,27 +241,27 @@ void showHelp(nor_utils::Args& args, const vector<string>& learnersList)
  */
 void showOptionalHelp(nor_utils::Args& args)
 {
-	string helpType = args.getValue<string>("h", 0);
-	
-	cout << "MultiBoost (v" << CURRENT_VERSION << "). An obvious name for a multi-class AdaBoost learner." << endl;
-	cout << "---------------------------------------------------------------------------" << endl;
-	
-	if (helpType == "general")
-		args.printGroup("General Options");
-	else if (helpType == "io")
-		args.printGroup("I/O Options");
-	else if (helpType == "algo")
-		args.printGroup("Basic Algorithm Options");
-	else if (helpType == "bandits")
-		args.printGroup("Bandit Algorithm Options");
-	else if (helpType == "vjcascade")
-		args.printGroup("Viola-Jones Cascade Algorithm Options");
-	else if (helpType == "softcascade")
-		args.printGroup("SoftCascade Algorithm Options");
-	else if ( BaseLearner::RegisteredLearners().hasLearner(helpType) )
-		args.printGroup(helpType + " Options");
-	else
-		cerr << "ERROR: Unknown help section <" << helpType << ">" << endl;
+    string helpType = args.getValue<string>("h", 0);
+        
+    cout << "MultiBoost (v" << CURRENT_VERSION << "). An obvious name for a multi-class AdaBoost learner." << endl;
+    cout << "---------------------------------------------------------------------------" << endl;
+        
+    if (helpType == "general")
+        args.printGroup("General Options");
+    else if (helpType == "io")
+        args.printGroup("I/O Options");
+    else if (helpType == "algo")
+        args.printGroup("Basic Algorithm Options");
+    else if (helpType == "bandits")
+        args.printGroup("Bandit Algorithm Options");
+    else if (helpType == "vjcascade")
+        args.printGroup("Viola-Jones Cascade Algorithm Options");
+    else if (helpType == "softcascade")
+        args.printGroup("SoftCascade Algorithm Options");
+    else if ( BaseLearner::RegisteredLearners().hasLearner(helpType) )
+        args.printGroup(helpType + " Options");
+    else
+        cerr << "ERROR: Unknown help section <" << helpType << ">" << endl;
 }
 
 //---------------------------------------------------------------------------
@@ -270,26 +272,26 @@ void showOptionalHelp(nor_utils::Args& args)
  */
 void showStaticConfig()
 {
-	cout << "MultiBoost (v" << CURRENT_VERSION << "). An obvious name for a multi-class AdaBoost learner." << endl;
-	cout << "------------------------ STATIC CONFIG -------------------------" << endl;
-	
-	cout << "- Sort type = ";
+    cout << "MultiBoost (v" << CURRENT_VERSION << "). An obvious name for a multi-class AdaBoost learner." << endl;
+    cout << "------------------------ STATIC CONFIG -------------------------" << endl;
+        
+    cout << "- Sort type = ";
 #if CONSERVATIVE_SORT
-	cout << "CONSERVATIVE (slow)" << endl;
+    cout << "CONSERVATIVE (slow)" << endl;
 #else
-	cout << "NON CONSERVATIVE (fast)" << endl;
+    cout << "NON CONSERVATIVE (fast)" << endl;
 #endif
-	
-	cout << "Comment: " << COMMENT << endl;
+        
+    cout << "Comment: " << COMMENT << endl;
 #ifndef NDEBUG
-	cout << "Important: NDEBUG not active!!" << endl;
+    cout << "Important: NDEBUG not active!!" << endl;
 #endif
-	
+        
 #if MB_DEBUG
-	cout << "MultiBoost debug active (MB_DEBUG=1)!!" << endl;
+    cout << "MultiBoost debug active (MB_DEBUG=1)!!" << endl;
 #endif
-	
-	exit(0);  
+        
+    exit(0);  
 }
 
 //---------------------------------------------------------------------------
@@ -303,394 +305,399 @@ void showStaticConfig()
  */
 int main(int argc, const char* argv[])
 {
-	// initializing the random number generator
-	srand ( time(NULL) );
-	
-	// no need to synchronize with C style stream
-	std::ios_base::sync_with_stdio(false);
-	
+    // initializing the random number generator
+    srand ( time(NULL) );
+        
+    // no need to synchronize with C style stream
+    std::ios_base::sync_with_stdio(false);
+        
 #if STABLE_SORT
-	cerr << "WARNING: Stable sort active! It might be slower!!" << endl;
+    cerr << "WARNING: Stable sort active! It might be slower!!" << endl;
 #endif
-	
-	//////////////////////////////////////////////////////////////////////////
-	// Standard arguments
-	nor_utils::Args args;
-	
-	args.setArgumentDiscriminator("--");
-	
-	args.declareArgument("help");
-	args.declareArgument("static");
-	
-	args.declareArgument("h", "Help", 1, "<optiongroup>");
-	
-	//////////////////////////////////////////////////////////////////////////
-	// Basic Arguments
-	
-	args.setGroup("Parameters");
-	
-	args.declareArgument("train", "Performs training.", 2, "<dataFile> <nInterations>");
-	args.declareArgument("traintest", "Performs training and test at the same time.", 3, "<trainingDataFile> <testDataFile> <nInterations>");
-	args.declareArgument("trainvalidtest", "Performs training and test at the same time.", 4, "<trainingDataFile> <validDataFile> <testDataFile> <nInterations>");
-	args.declareArgument("test", "Test the model.", 3, "<dataFile> <numIters> <shypFile>");
-	args.declareArgument("test", "Test the model and output the results", 4, "<datafile> <shypFile> <numIters> <outFile>");
-	args.declareArgument("cmatrix", "Print the confusion matrix for the given model.", 2, "<dataFile> <shypFile>");
-	args.declareArgument("cmatrixfile", "Print the confusion matrix with the class names to a file.", 3, "<dataFile> <shypFile> <outFile>");
-	args.declareArgument("posteriors", "Output the posteriors for each class, that is the vector-valued discriminant function for the given dataset and model.", 4, "<dataFile> <shypFile> <outFile> <numIters>");
-	args.declareArgument("posteriors", "Output the posteriors for each class, that is the vector-valued discriminant function for the given dataset and model periodically.", 5, "<dataFile> <shypFile> <outFile> <numIters> <period>");	
-		
-	args.declareArgument("encode", "Save the coefficient vector of boosting individually on each point using ParasiteLearner", 6, "<inputDataFile> <autoassociativeDataFile> <outputDataFile> <nIterations> <poolFile> <nBaseLearners>");	
-	args.declareArgument("ssfeatures", "Print matrix data for SingleStump-Based weak learners (if numIters=0 it means all of them).", 4, "<dataFile> <shypFile> <outFile> <numIters>");
-	
-	args.declareArgument( "fileformat", "Defines the type of intput file. Available types are:\n" 
-						 "* simple: each line has attributes separated by whitespace and class at the end (DEFAULT!)\n"
-						 "* arff: arff filetype. The header file can be specified using --headerfile option\n"
-						 "* arffbzip: bziped arff filetype. The header file can be specified using --headerfile option\n"
-						 "* svmlight: \n"
-						 "(Example: --fileformat simple)",
-                         1, "<fileFormat>" );
-	
-	args.declareArgument("headerfile", "The header file for arff and SVMLight and arff formats.", 1, "header.txt");
-	
-	args.declareArgument("constant", "Check constant learner in each iteration.", 0, "");
-	args.declareArgument("timelimit", "Time limit in minutes", 1, "<minutes>" );
-	args.declareArgument("stronglearner", "Available strong learners:\n"
-						 "AdaBoost (default)\n"
-						 "FilterBoost\n"
+        
+    //////////////////////////////////////////////////////////////////////////
+    // Standard arguments
+    nor_utils::Args args;
+        
+    args.setArgumentDiscriminator("--");
+        
+    args.declareArgument("help");
+    args.declareArgument("static");
+        
+    args.declareArgument("h", "Help", 1, "<optiongroup>");
+        
+    //////////////////////////////////////////////////////////////////////////
+    // Basic Arguments
+        
+    args.setGroup("Parameters");
+        
+    args.declareArgument("train", "Performs training.", 2, "<dataFile> <nInterations>");
+    args.declareArgument("traintest", "Performs training and test at the same time.", 3, "<trainingDataFile> <testDataFile> <nInterations>");
+    args.declareArgument("trainvalidtest", "Performs training and test at the same time.", 4, "<trainingDataFile> <validDataFile> <testDataFile> <nInterations>");
+    args.declareArgument("test", "Test the model.", 3, "<dataFile> <numIters> <shypFile>");
+    args.declareArgument("test", "Test the model and output the results", 4, "<datafile> <shypFile> <numIters> <outFile>");
+    args.declareArgument("cmatrix", "Print the confusion matrix for the given model.", 2, "<dataFile> <shypFile>");
+    args.declareArgument("cmatrixfile", "Print the confusion matrix with the class names to a file.", 3, "<dataFile> <shypFile> <outFile>");
+    args.declareArgument("posteriors", "Output the posteriors for each class, that is the vector-valued discriminant function for the given dataset and model.", 4, "<dataFile> <shypFile> <outFile> <numIters>");
+    args.declareArgument("posteriors", "Output the posteriors for each class, that is the vector-valued discriminant function for the given dataset and model periodically.", 5, "<dataFile> <shypFile> <outFile> <numIters> <period>");    
+                
+    args.declareArgument("encode", "Save the coefficient vector of boosting individually on each point using ParasiteLearner", 6, "<inputDataFile> <autoassociativeDataFile> <outputDataFile> <nIterations> <poolFile> <nBaseLearners>");   
+    args.declareArgument("ssfeatures", "Print matrix data for SingleStump-Based weak learners (if numIters=0 it means all of them).", 4, "<dataFile> <shypFile> <outFile> <numIters>");
+        
+    args.declareArgument( "fileformat", "Defines the type of intput file. Available types are:\n" 
+                          "* simple: each line has attributes separated by whitespace and class at the end (DEFAULT!)\n"
+                          "* arff: arff filetype. The header file can be specified using --headerfile option\n"
+                          "* arffbzip: bziped arff filetype. The header file can be specified using --headerfile option\n"
+                          "* svmlight: \n"
+                          "(Example: --fileformat simple)",
+                          1, "<fileFormat>" );
+        
+    args.declareArgument("headerfile", "The header file for arff and SVMLight and arff formats.", 1, "header.txt");
+        
+    args.declareArgument("constant", "Check constant learner in each iteration.", 0, "");
+    args.declareArgument("timelimit", "Time limit in minutes", 1, "<minutes>" );
+    args.declareArgument("stronglearner", "Available strong learners:\n"
+                         "AdaBoost (default)\n"
+                         "FilterBoost\n"
                          "SoftCascade\n"
+			 "ArcGV\n"
                          "VJcascade\n", 1, "<stronglearner>" );
-	
-	args.declareArgument("slowresumeprocess", "Computes every statitstic in each iteration (slow resume)\n"
-						 "Computes only the statistics in the last iteration (fast resume, default)\n", 0, "" );
-	args.declareArgument("weights", "Outputs the weights of instances at the end of the learning process", 1, "<filename>" );
-	args.declareArgument("Cn", "Resampling size for FilterBoost (default=300)", 1, "<value>" );
-	//// ignored for the moment!
-	//args.declareArgument("arffheader", "Specify the arff header.", 1, "<arffHeaderFile>");
-	
-	// for VJ cascade
-	VJCascadeLearner::declareBaseArguments(args);
+        
+    args.declareArgument("slowresumeprocess", "Computes every statitstic in each iteration (slow resume)\n"
+                         "Computes only the statistics in the last iteration (fast resume, default)\n", 0, "" );
+    args.declareArgument("weights", "Outputs the weights of instances at the end of the learning process", 1, "<filename>" );
+    args.declareArgument("Cn", "Resampling size for FilterBoost (default=300)", 1, "<value>" );
+    args.declareArgument("minmarginthreshold", "Below this margin the coeeficient of weak classifiers are not regularized", 1, "<value>" );
+        
+    args.declareArgument("onlinetraining", "The weak learner will be trained online\n", 0, "" );
+        
+    //// ignored for the moment!
+    //args.declareArgument("arffheader", "Specify the arff header.", 1, "<arffHeaderFile>");
+        
+    // for VJ cascade
+    VJCascadeLearner::declareBaseArguments(args);
     
     // for SoftCascade
     SoftCascadeLearner::declareBaseArguments(args);
-	//////////////////////////////////////////////////////////////////////////
-	// Options
-	
-	args.setGroup("I/O Options");
-	
-	/////////////////////////////////////////////
-	// these are valid only for .txt input!
-	// they might be removed!
-	args.declareArgument("d", "The separation characters between the fields (default: whitespaces).\nExample: -d \"\\t,.-\"\nNote: new-line is always included!", 1, "<separators>");
-	args.declareArgument("classend", "The class is the last column instead of the first (or second if -examplelabel is active).");
-	args.declareArgument("examplename", "The data file has an additional column (the very first) which contains the 'name' of the example.");
-	/////////////////////////////////////////////
-	
-	args.setGroup("Basic Algorithm Options");
-	args.declareArgument("weightpolicy", "Specify the type of weight initialization. The user specified weights (if available) are used inside the policy which can be:\n"
-						 "* sharepoints Share the weight equally among data points and between positiv and negative labels (DEFAULT)\n"
-						 "* sharelabels Share the weight equally among data points\n"
-						 "* proportional Share the weights freely", 1, "<weightType>");
-	
-	
-	args.setGroup("General Options");
-	
-	args.declareArgument("verbose", "Set the verbose level 0, 1 or 2 (0=no messages, 1=default, 2=all messages).", 1, "<val>");
-	args.declareArgument("outputinfo", "Output informations on the algorithm performances during training, on file <filename>.", 1, "<filename>");
-	args.declareArgument("outputinfo", "Output specific informations on the algorithm performances during training, on file <filename> <outputlist>. <outputlist> must be a concatenated list of three characters abreviation (ex: err for error, fpr for false positive rate)", 2, "<filename> <outputlist>");
-
-	args.declareArgument("seed", "Defines the seed for the random operations.", 1, "<seedval>");
-	
-	//////////////////////////////////////////////////////////////////////////
-	// Shows the list of available learners
-	string learnersComment = "Available learners are:";
-	
-	vector<string> learnersList;
-	BaseLearner::RegisteredLearners().getList(learnersList);
-	vector<string>::const_iterator it;
-	for (it = learnersList.begin(); it != learnersList.end(); ++it)
-	{
-		learnersComment += "\n ** " + *it;
-		// defaultLearner is defined in Defaults.h
-		if ( *it == defaultLearner )
-			learnersComment += " (DEFAULT)";
-	}
-	
-	args.declareArgument("learnertype", "Change the type of weak learner. " + learnersComment, 1, "<learner>");
-	
-	//////////////////////////////////////////////////////////////////////////
-	//// Declare arguments that belongs to all weak learners
-	BaseLearner::declareBaseArguments(args);
-	
-	////////////////////////////////////////////////////////////////////////////
-	//// Weak learners (and input data) arguments
-	for (it = learnersList.begin(); it != learnersList.end(); ++it)
-	{
-		args.setGroup(*it + " Options");
-		// add weaklearner-specific options
-		BaseLearner::RegisteredLearners().getLearner(*it)->declareArguments(args);
-	}
-	
-	//////////////////////////////////////////////////////////////////////////
-	//// Declare arguments that belongs to all bandit learner
-	GenericBanditAlgorithm::declareBaseArguments(args);
-	
-	
-	//////////////////////////////////////////////////////////////////////////////////////////  
-	//////////////////////////////////////////////////////////////////////////////////////////
-	
-	switch ( args.readArguments(argc, argv) )
-	{
-		case nor_utils::AOT_NO_ARGUMENTS:
-			showBase();
-			break;
-			
-		case nor_utils::AOT_UNKOWN_ARGUMENT:
-			exit(1);
-			break;
-			
-		case nor_utils::AOT_INCORRECT_VALUES_NUMBER:
-			exit(1);
-			break;
-			
-		case nor_utils::AOT_OK:
-			break;
-	}
-	
-	//////////////////////////////////////////////////////////////////////////////////////////  
-	//////////////////////////////////////////////////////////////////////////////////////////
-	
-	if ( args.hasArgument("help") )
-		showHelp(args, learnersList);
-	if ( args.hasArgument("static") )
-		showStaticConfig();
-	
-	//////////////////////////////////////////////////////////////////////////////////////////  
-	//////////////////////////////////////////////////////////////////////////////////////////
-	
-	if ( args.hasArgument("h") )
-		showOptionalHelp(args);
-	
-	//////////////////////////////////////////////////////////////////////////////////////////  
-	//////////////////////////////////////////////////////////////////////////////////////////
-	
-	int verbose = 1;
-	
-	if ( args.hasArgument("verbose") )
-		args.getValue("verbose", 0, verbose);
-	
-	//////////////////////////////////////////////////////////////////////////////////////////  
-	//////////////////////////////////////////////////////////////////////////////////////////
-	
-	// defines the seed
-	if (args.hasArgument("seed"))
-	{
-		unsigned int seed = args.getValue<unsigned int>("seed", 0);
-		srand(seed);
-	}
-	
-	//////////////////////////////////////////////////////////////////////////////////////////  
-	//////////////////////////////////////////////////////////////////////////////////////////
-	
-	GenericStrongLearner* pModel = NULL;
-	
-	if ( args.hasArgument("train") ||
-        args.hasArgument("traintest") || 
-	    args.hasArgument("trainvalidtest") ) // for Viola-Jones Cascade
-	{
-		
-		// get the name of the learner
-		string baseLearnerName = defaultLearner;
-		if ( args.hasArgument("learnertype") )
-			args.getValue("learnertype", 0, baseLearnerName);
-		
-		checkBaseLearner(baseLearnerName);
-		if (verbose > 1)    
-			cout << "--> Using learner: " << baseLearnerName << endl;
-		
-		// This hould be changed: the user decides the strong learner
-		BaseLearner*  pWeakHypothesisSource = BaseLearner::RegisteredLearners().getLearner(baseLearnerName);
-		pModel = pWeakHypothesisSource->createGenericStrongLearner( args );
-		
-		pModel->run(args);
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////
-	else if ( args.hasArgument("test") )
-	{
-		// -test <dataFile> <shypFile> <numIters>
-		string shypFileName = args.getValue<string>("test", 1);
-		
-		string baseLearnerName = UnSerialization::getWeakLearnerName(shypFileName);
-                
-		BaseLearner*  pWeakHypothesisSource = BaseLearner::RegisteredLearners().getLearner(baseLearnerName);
-		pModel = pWeakHypothesisSource->createGenericStrongLearner( args );
-		
-		pModel->classify(args);
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////
-	else if ( args.hasArgument("cmatrix") )
-	{
-		// -cmatrix <dataFile> <shypFile>
-		
-		string shypFileName = args.getValue<string>("cmatrix", 1);
-		
-		string baseLearnerName = UnSerialization::getWeakLearnerName(shypFileName);
-		BaseLearner*  pWeakHypothesisSource = BaseLearner::RegisteredLearners().getLearner(baseLearnerName);
-		pModel = pWeakHypothesisSource->createGenericStrongLearner( args );
-		
-		pModel->doConfusionMatrix(args);
-	}
-	//////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////
-	else if ( args.hasArgument("posteriors") )
-	{
-		// -posteriors <dataFile> <shypFile> <outFileName>
-		string shypFileName = args.getValue<string>("posteriors", 1);
-		
-		string baseLearnerName = UnSerialization::getWeakLearnerName(shypFileName);
+    //////////////////////////////////////////////////////////////////////////
+    // Options
         
-		BaseLearner*  pWeakHypothesisSource = BaseLearner::RegisteredLearners().getLearner(baseLearnerName);
-		pModel = pWeakHypothesisSource->createGenericStrongLearner( args );
-		
-		pModel->doPosteriors(args);
-	}   
-	//////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////
-	else if ( args.hasArgument("ssfeatures") )
-	{
-		// ONLY for AdaBoostMH classifiers
-		
-		// -ssfeatures <dataFile> <shypFile> <outFile> <numIters>
-		string testFileName = args.getValue<string>("ssfeatures", 0);
-		string shypFileName = args.getValue<string>("ssfeatures", 1);
-		string outFileName = args.getValue<string>("ssfeatures", 2);
-		int numIterations = args.getValue<int>("ssfeatures", 3);
-		
-		cerr << "ERROR: ssfeatures has been deactivated for the moment!" << endl;
-		
-		
-		//classifier.saveSingleStumpFeatureData(testFileName, shypFileName, outFileName, numIterations);
-	}
-	
-	//////////////////////////////////////////////////////////////////////////////////////////
-	//////////////////////////////////////////////////////////////////////////////////////////
-	else if ( args.hasArgument("encode") )
-	{
-		
-		// --encode <inputDataFile> <outputDataFile> <nIterations> <poolFile> <nBaseLearners>
-		string labelsFileName = args.getValue<string>("encode", 0);
-		string autoassociativeFileName = args.getValue<string>("encode", 1);
-		string outputFileName = args.getValue<string>("encode", 2);
-		int numIterations = args.getValue<int>("encode", 3);
-		string poolFileName = args.getValue<string>("encode", 4);
-		int numBaseLearners = args.getValue<int>("encode", 5);
-		string outputInfoFile;
-		const char* tmpArgv1[] = {"bla", // for ParasiteLearner
-			"--pool",
-			args.getValue<string>("encode", 4).c_str(),
-			args.getValue<string>("encode", 5).c_str()};
-		args.readArguments(4,tmpArgv1);
-		
-		InputData* pAutoassociativeData = new InputData();
-		pAutoassociativeData->initOptions(args);
-		pAutoassociativeData->load(autoassociativeFileName,IT_TRAIN,verbose);
-		
-		// for the original labels
-		InputData* pLabelsData = new InputData();
-		pLabelsData->initOptions(args);
-		pLabelsData->load(labelsFileName,IT_TRAIN,verbose);
-		
-		// set up all the InputData members identically to pAutoassociativeData
-		EncodeData* pOnePoint = new EncodeData();
-		pOnePoint->initOptions(args);
-		pOnePoint->load(autoassociativeFileName,IT_TRAIN,verbose);
-		
-		const int numExamples = pAutoassociativeData->getNumExamples();
-		BaseLearner* pWeakHypothesisSource = 
-		BaseLearner::RegisteredLearners().getLearner("ParasiteLearner");
-		pWeakHypothesisSource->declareArguments(args);
-		
-		ParasiteLearner* pWeakHypothesis;
-		
-		ofstream outFile(outputFileName.c_str());
-		if (!outFile.is_open())
-		{
-			cerr << "ERROR: Cannot open strong hypothesis file <" << outputFileName << ">!" << endl;
-			exit(1);
-		}
-		
-		for (int i = 0; i < numExamples ; ++i)
-		{
-			vector<float> alphas;
-			alphas.resize(numBaseLearners);
-			fill(alphas.begin(), alphas.end(), 0);
-			
-			if (verbose >= 1)
-				cout << "--> Encoding example no " << (i+1) << endl;
-			pOnePoint->resetData();
-			pOnePoint->addExample( pAutoassociativeData->getExample(i) );
-			float energy = 1;
-			
-			OutputInfo* pOutInfo = NULL;
-			if ( args.hasArgument("outputinfo") ) 
-			{
-				args.getValue("outputinfo", 0, outputInfoFile);
-				pOutInfo = new OutputInfo(args);
-				pOutInfo->initialize(pOnePoint);
-			}
-			
-			
-			for (int t = 0; t < numIterations; ++t)
-			{
-				pWeakHypothesis = (ParasiteLearner*)pWeakHypothesisSource->create();
-				pWeakHypothesis->initLearningOptions(args);
-				pWeakHypothesis->setTrainingData(pOnePoint);
-				energy *= pWeakHypothesis->run();
-				// 	    if (verbose >= 2)
-				//  	       cout << "energy = " << energy << endl << flush;
-				AdaBoostMHLearner adaBoostMHLearner;
-				
-				if (i == 0 && t == 0)
-				{
-					if ( pWeakHypothesis->getBaseLearners().size() < numBaseLearners )
-						numBaseLearners = pWeakHypothesis->getBaseLearners().size();
-					outFile << "%Hidden representation using autoassociative boosting" << endl << endl;
-					outFile << "@RELATION " << outputFileName << endl << endl;
-					outFile << "% numBaseLearners" << endl;
-					for (int j = 0; j < numBaseLearners; ++j) 
-						outFile << "@ATTRIBUTE " << j << "_" <<
-						pWeakHypothesis->getBaseLearners()[j]->getId() << " NUMERIC" << endl;
-					outFile << "@ATTRIBUTE class {" << pLabelsData->getClassMap().getNameFromIdx(0);
-					for (int l = 1; l < pLabelsData->getClassMap().getNumNames(); ++l)
-						outFile << ", " << pLabelsData->getClassMap().getNameFromIdx(l);
-					outFile << "}" << endl<< endl<< "@DATA" << endl;
-				}
-				alphas[pWeakHypothesis->getSelectedIndex()] += 
-				pWeakHypothesis->getAlpha() * pWeakHypothesis->getSignOfAlpha();
-				if ( pOutInfo )
-					adaBoostMHLearner.printOutputInfo(pOutInfo, t, pOnePoint, NULL, pWeakHypothesis);
-				adaBoostMHLearner.updateWeights(pOnePoint,pWeakHypothesis);
-			}
-			float sumAlphas = 0;
-			for (int j = 0; j < numBaseLearners; ++j)
-				sumAlphas += alphas[j];
-			
-			for (int j = 0; j < numBaseLearners; ++j)
-				outFile << alphas[j]/sumAlphas << ",";
-			const vector<Label>& labels = pLabelsData->getLabels(i);
-			for (int l = 0; l < labels.size(); ++l)
-				if (labels[l].y > 0)
-					outFile << pLabelsData->getClassMap().getNameFromIdx(labels[l].idx) << endl;
-			delete pOutInfo;
-		}
-		outFile.close();
-	}
-	
-	if (pModel)
-		delete pModel;
-	
-	return 0;
+    args.setGroup("I/O Options");
+        
+    /////////////////////////////////////////////
+    // these are valid only for .txt input!
+    // they might be removed!
+    args.declareArgument("d", "The separation characters between the fields (default: whitespaces).\nExample: -d \"\\t,.-\"\nNote: new-line is always included!", 1, "<separators>");
+    args.declareArgument("classend", "The class is the last column instead of the first (or second if -examplelabel is active).");
+    args.declareArgument("examplename", "The data file has an additional column (the very first) which contains the 'name' of the example.");
+    /////////////////////////////////////////////
+        
+    args.setGroup("Basic Algorithm Options");
+    args.declareArgument("weightpolicy", "Specify the type of weight initialization. The user specified weights (if available) are used inside the policy which can be:\n"
+                         "* sharepoints Share the weight equally among data points and between positiv and negative labels (DEFAULT)\n"
+                         "* sharelabels Share the weight equally among data points\n"
+                         "* proportional Share the weights freely", 1, "<weightType>");
+        
+        
+    args.setGroup("General Options");
+        
+    args.declareArgument("verbose", "Set the verbose level 0, 1 or 2 (0=no messages, 1=default, 2=all messages).", 1, "<val>");
+    args.declareArgument("outputinfo", "Output informations on the algorithm performances during training, on file <filename>.", 1, "<filename>");
+    args.declareArgument("outputinfo", "Output specific informations on the algorithm performances during training, on file <filename> <outputlist>. <outputlist> must be a concatenated list of three characters abreviation (ex: err for error, fpr for false positive rate)", 2, "<filename> <outputlist>");
+
+    args.declareArgument("seed", "Defines the seed for the random operations.", 1, "<seedval>");
+        
+    //////////////////////////////////////////////////////////////////////////
+    // Shows the list of available learners
+    string learnersComment = "Available learners are:";
+        
+    vector<string> learnersList;
+    BaseLearner::RegisteredLearners().getList(learnersList);
+    vector<string>::const_iterator it;
+    for (it = learnersList.begin(); it != learnersList.end(); ++it)
+    {
+        learnersComment += "\n ** " + *it;
+        // defaultLearner is defined in Defaults.h
+        if ( *it == defaultLearner )
+            learnersComment += " (DEFAULT)";
+    }
+        
+    args.declareArgument("learnertype", "Change the type of weak learner. " + learnersComment, 1, "<learner>");
+        
+    //////////////////////////////////////////////////////////////////////////
+    //// Declare arguments that belongs to all weak learners
+    BaseLearner::declareBaseArguments(args);
+        
+    ////////////////////////////////////////////////////////////////////////////
+    //// Weak learners (and input data) arguments
+    for (it = learnersList.begin(); it != learnersList.end(); ++it)
+    {
+        args.setGroup(*it + " Options");
+        // add weaklearner-specific options
+        BaseLearner::RegisteredLearners().getLearner(*it)->declareArguments(args);
+    }
+        
+    //////////////////////////////////////////////////////////////////////////
+    //// Declare arguments that belongs to all bandit learner
+    GenericBanditAlgorithm::declareBaseArguments(args);
+        
+        
+    //////////////////////////////////////////////////////////////////////////////////////////  
+    //////////////////////////////////////////////////////////////////////////////////////////
+        
+    switch ( args.readArguments(argc, argv) )
+    {
+    case nor_utils::AOT_NO_ARGUMENTS:
+        showBase();
+        break;
+                        
+    case nor_utils::AOT_UNKOWN_ARGUMENT:
+        exit(1);
+        break;
+                        
+    case nor_utils::AOT_INCORRECT_VALUES_NUMBER:
+        exit(1);
+        break;
+                        
+    case nor_utils::AOT_OK:
+        break;
+    }
+        
+    //////////////////////////////////////////////////////////////////////////////////////////  
+    //////////////////////////////////////////////////////////////////////////////////////////
+        
+    if ( args.hasArgument("help") )
+        showHelp(args, learnersList);
+    if ( args.hasArgument("static") )
+        showStaticConfig();
+        
+    //////////////////////////////////////////////////////////////////////////////////////////  
+    //////////////////////////////////////////////////////////////////////////////////////////
+        
+    if ( args.hasArgument("h") )
+        showOptionalHelp(args);
+        
+    //////////////////////////////////////////////////////////////////////////////////////////  
+    //////////////////////////////////////////////////////////////////////////////////////////
+        
+    int verbose = 1;
+        
+    if ( args.hasArgument("verbose") )
+        args.getValue("verbose", 0, verbose);
+        
+    //////////////////////////////////////////////////////////////////////////////////////////  
+    //////////////////////////////////////////////////////////////////////////////////////////
+        
+    // defines the seed
+    if (args.hasArgument("seed"))
+    {
+        unsigned int seed = args.getValue<unsigned int>("seed", 0);
+        srand(seed);
+    }
+        
+    //////////////////////////////////////////////////////////////////////////////////////////  
+    //////////////////////////////////////////////////////////////////////////////////////////
+        
+    GenericStrongLearner* pModel = NULL;
+        
+    if ( args.hasArgument("train") ||
+         args.hasArgument("traintest") || 
+         args.hasArgument("trainvalidtest") ) // for Viola-Jones Cascade
+    {
+                
+        // get the name of the learner
+        string baseLearnerName = defaultLearner;
+        if ( args.hasArgument("learnertype") )
+            args.getValue("learnertype", 0, baseLearnerName);
+                
+        checkBaseLearner(baseLearnerName);
+        if (verbose > 1)    
+            cout << "--> Using learner: " << baseLearnerName << endl;
+                
+        // This hould be changed: the user decides the strong learner
+        BaseLearner*  pWeakHypothesisSource = BaseLearner::RegisteredLearners().getLearner(baseLearnerName);
+        pModel = pWeakHypothesisSource->createGenericStrongLearner( args );
+                
+        pModel->run(args);
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    else if ( args.hasArgument("test") )
+    {
+        // -test <dataFile> <shypFile> <numIters>
+        string shypFileName = args.getValue<string>("test", 1);
+                
+        string baseLearnerName = UnSerialization::getWeakLearnerName(shypFileName);
+                
+        BaseLearner*  pWeakHypothesisSource = BaseLearner::RegisteredLearners().getLearner(baseLearnerName);
+        pModel = pWeakHypothesisSource->createGenericStrongLearner( args );
+                
+        pModel->classify(args);
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    else if ( args.hasArgument("cmatrix") )
+    {
+        // -cmatrix <dataFile> <shypFile>
+                
+        string shypFileName = args.getValue<string>("cmatrix", 1);
+                
+        string baseLearnerName = UnSerialization::getWeakLearnerName(shypFileName);
+        BaseLearner*  pWeakHypothesisSource = BaseLearner::RegisteredLearners().getLearner(baseLearnerName);
+        pModel = pWeakHypothesisSource->createGenericStrongLearner( args );
+                
+        pModel->doConfusionMatrix(args);
+    }
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    else if ( args.hasArgument("posteriors") )
+    {
+        // -posteriors <dataFile> <shypFile> <outFileName>
+        string shypFileName = args.getValue<string>("posteriors", 1);
+                
+        string baseLearnerName = UnSerialization::getWeakLearnerName(shypFileName);
+        
+        BaseLearner*  pWeakHypothesisSource = BaseLearner::RegisteredLearners().getLearner(baseLearnerName);
+        pModel = pWeakHypothesisSource->createGenericStrongLearner( args );
+                
+        pModel->doPosteriors(args);
+    }   
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    else if ( args.hasArgument("ssfeatures") )
+    {
+        // ONLY for AdaBoostMH classifiers
+                
+        // -ssfeatures <dataFile> <shypFile> <outFile> <numIters>
+        string testFileName = args.getValue<string>("ssfeatures", 0);
+        string shypFileName = args.getValue<string>("ssfeatures", 1);
+        string outFileName = args.getValue<string>("ssfeatures", 2);
+        int numIterations = args.getValue<int>("ssfeatures", 3);
+                
+        cerr << "ERROR: ssfeatures has been deactivated for the moment!" << endl;
+                
+                
+        //classifier.saveSingleStumpFeatureData(testFileName, shypFileName, outFileName, numIterations);
+    }
+        
+    //////////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    else if ( args.hasArgument("encode") )
+    {
+                
+        // --encode <inputDataFile> <outputDataFile> <nIterations> <poolFile> <nBaseLearners>
+        string labelsFileName = args.getValue<string>("encode", 0);
+        string autoassociativeFileName = args.getValue<string>("encode", 1);
+        string outputFileName = args.getValue<string>("encode", 2);
+        int numIterations = args.getValue<int>("encode", 3);
+        string poolFileName = args.getValue<string>("encode", 4);
+        int numBaseLearners = args.getValue<int>("encode", 5);
+        string outputInfoFile;
+        const char* tmpArgv1[] = {"bla", // for ParasiteLearner
+                                  "--pool",
+                                  args.getValue<string>("encode", 4).c_str(),
+                                  args.getValue<string>("encode", 5).c_str()};
+        args.readArguments(4,tmpArgv1);
+                
+        InputData* pAutoassociativeData = new InputData();
+        pAutoassociativeData->initOptions(args);
+        pAutoassociativeData->load(autoassociativeFileName,IT_TRAIN,verbose);
+                
+        // for the original labels
+        InputData* pLabelsData = new InputData();
+        pLabelsData->initOptions(args);
+        pLabelsData->load(labelsFileName,IT_TRAIN,verbose);
+                
+        // set up all the InputData members identically to pAutoassociativeData
+        EncodeData* pOnePoint = new EncodeData();
+        pOnePoint->initOptions(args);
+        pOnePoint->load(autoassociativeFileName,IT_TRAIN,verbose);
+                
+        const int numExamples = pAutoassociativeData->getNumExamples();
+        BaseLearner* pWeakHypothesisSource = 
+            BaseLearner::RegisteredLearners().getLearner("ParasiteLearner");
+        pWeakHypothesisSource->declareArguments(args);
+                
+        ParasiteLearner* pWeakHypothesis;
+                
+        ofstream outFile(outputFileName.c_str());
+        if (!outFile.is_open())
+        {
+            cerr << "ERROR: Cannot open strong hypothesis file <" << outputFileName << ">!" << endl;
+            exit(1);
+        }
+                
+        for (int i = 0; i < numExamples ; ++i)
+        {
+            vector<float> alphas;
+            alphas.resize(numBaseLearners);
+            fill(alphas.begin(), alphas.end(), 0);
+                        
+            if (verbose >= 1)
+                cout << "--> Encoding example no " << (i+1) << endl;
+            pOnePoint->resetData();
+            pOnePoint->addExample( pAutoassociativeData->getExample(i) );
+            AlphaReal energy = 1;
+                        
+            OutputInfo* pOutInfo = NULL;
+            if ( args.hasArgument("outputinfo") ) 
+            {
+                args.getValue("outputinfo", 0, outputInfoFile);
+                pOutInfo = new OutputInfo(args);
+                pOutInfo->initialize(pOnePoint);
+            }
+                        
+                        
+            for (int t = 0; t < numIterations; ++t)
+            {
+                pWeakHypothesis = (ParasiteLearner*)pWeakHypothesisSource->create();
+                pWeakHypothesis->initLearningOptions(args);
+                pWeakHypothesis->setTrainingData(pOnePoint);
+                energy *= pWeakHypothesis->run();
+                //          if (verbose >= 2)
+                //             cout << "energy = " << energy << endl << flush;
+                AdaBoostMHLearner adaBoostMHLearner;
+                                
+                if (i == 0 && t == 0)
+                {
+                    if ( pWeakHypothesis->getBaseLearners().size() < numBaseLearners )
+                        numBaseLearners = pWeakHypothesis->getBaseLearners().size();
+                    outFile << "%Hidden representation using autoassociative boosting" << endl << endl;
+                    outFile << "@RELATION " << outputFileName << endl << endl;
+                    outFile << "% numBaseLearners" << endl;
+                    for (int j = 0; j < numBaseLearners; ++j) 
+                        outFile << "@ATTRIBUTE " << j << "_" <<
+                            pWeakHypothesis->getBaseLearners()[j]->getId() << " NUMERIC" << endl;
+                    outFile << "@ATTRIBUTE class {" << pLabelsData->getClassMap().getNameFromIdx(0);
+                    for (int l = 1; l < pLabelsData->getClassMap().getNumNames(); ++l)
+                        outFile << ", " << pLabelsData->getClassMap().getNameFromIdx(l);
+                    outFile << "}" << endl<< endl<< "@DATA" << endl;
+                }
+                alphas[pWeakHypothesis->getSelectedIndex()] += 
+                    pWeakHypothesis->getAlpha() * pWeakHypothesis->getSignOfAlpha();
+                if ( pOutInfo )
+                    adaBoostMHLearner.printOutputInfo(pOutInfo, t, pOnePoint, NULL, pWeakHypothesis);
+                adaBoostMHLearner.updateWeights(pOnePoint,pWeakHypothesis);
+            }
+            float sumAlphas = 0;
+            for (int j = 0; j < numBaseLearners; ++j)
+                sumAlphas += alphas[j];
+                        
+            for (int j = 0; j < numBaseLearners; ++j)
+                outFile << alphas[j]/sumAlphas << ",";
+            const vector<Label>& labels = pLabelsData->getLabels(i);
+            for (int l = 0; l < labels.size(); ++l)
+                if (labels[l].y > 0)
+                    outFile << pLabelsData->getClassMap().getNameFromIdx(labels[l].idx) << endl;
+            delete pOutInfo;
+        }
+        outFile.close();
+    }
+        
+    if (pModel)
+        delete pModel;
+        
+    return 0;
 }
 
 // -----------------------------------------------------------------------------

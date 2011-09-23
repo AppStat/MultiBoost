@@ -55,49 +55,49 @@ using namespace std;
 //////////////////////////////////////////////////////////////////////////////////////////////
 
 namespace MultiBoost {
-	
-	/**
-	 * A \b single threshold decision stump learner. 
-	 * There is ONE and ONE ONLY threshold here.
-	 */
-	class OneClassStumpLearner : public virtual FeaturewiseLearner, 
-								 public virtual ScalarLearner,
-								 public virtual SingleStumpLearner
-	{
-	public:
-		
-		/**
-		 * The destructor. Must be declared (virtual) for the proper destruction of 
-		 * the object.
-		 */
-		virtual ~OneClassStumpLearner() {}
-		
-		/**
-		 * Returns itself as object.
-		 * \remark It uses the trick described in http://www.parashift.com/c++-faq-lite/serialization.html#faq-36.8
-		 * for the auto-registering classes.
-		 * \date 14/11/2005
-		 */
-		virtual BaseLearner* subCreate() { return new OneClassStumpLearner(); }
-		
-		
-		/**
-		 * Run the learner to build the classifier on the given data.
-		 * \param pData The pointer to the data.
-		 * \see BaseLearner::run
-		 * \date 11/11/2005
-		 */
-		virtual AlphaReal run();
-		
-		virtual AlphaReal run( int colIdx );
-		
-		// TODO: comment
-		virtual AlphaReal run( vector<int>& colIndexes );
-		
-	};
-	
-	//////////////////////////////////////////////////////////////////////////
-	
+        
+    /**
+     * A \b single threshold decision stump learner. 
+     * There is ONE and ONE ONLY threshold here.
+     */
+    class OneClassStumpLearner : public virtual FeaturewiseLearner, 
+        public virtual ScalarLearner,
+        public virtual SingleStumpLearner
+        {
+        public:
+                
+            /**
+             * The destructor. Must be declared (virtual) for the proper destruction of 
+             * the object.
+             */
+            virtual ~OneClassStumpLearner() {}
+                
+            /**
+             * Returns itself as object.
+             * \remark It uses the trick described in http://www.parashift.com/c++-faq-lite/serialization.html#faq-36.8
+             * for the auto-registering classes.
+             * \date 14/11/2005
+             */
+            virtual BaseLearner* subCreate() { return new OneClassStumpLearner(); }
+                
+                
+            /**
+             * Run the learner to build the classifier on the given data.
+             * \param pData The pointer to the data.
+             * \see BaseLearner::run
+             * \date 11/11/2005
+             */
+            virtual AlphaReal run();
+                
+            virtual AlphaReal run( int colIdx );
+                
+            // TODO: comment
+            virtual AlphaReal run( vector<int>& colIndexes );
+                
+        };
+        
+    //////////////////////////////////////////////////////////////////////////
+        
 } // end of namespace MultiBoost
 
 #endif // __SINGLE_STUMP_LEARNER_H
