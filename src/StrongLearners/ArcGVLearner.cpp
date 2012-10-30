@@ -188,7 +188,7 @@ namespace MultiBoost {
                 }
             }
                         
-            // add the arc-gv term to the coefficient of base classifier
+            // find the min margin on training data
             table& g = pOutInfo->getMargins( pTrainingData );                        
             AlphaReal alphaSum = pOutInfo->getSumOfAlphas(pTrainingData);
             if (nor_utils::is_zero(alphaSum)) alphaSum = 1.0;
@@ -210,17 +210,23 @@ namespace MultiBoost {
             {
                 cout << "---> Min margin: " << minMargin << endl;
             }
-                        
-            if (minMargin< _minMarginThreshold) minMargin = 0.0;
+
+            // add the arc-gv term to the coefficient of base classifier
+            // if the minMargin is smaller than a threshold, it is set to a user-defined value
+            if (minMargin< _minMarginThreshold) minMargin = _minMarginThreshold;
+
+            // update alpha
             AlphaReal alpha = pWeakHypothesis->getAlpha();
             AlphaReal newAlpha = alpha - 0.5 * log ( ( 1.0 + minMargin ) / ( 1.0 - minMargin ) ); 
-            pWeakHypothesis->setAlpha(newAlpha);            
+            pWeakHypothesis->setAlpha(newAlpha);
+
+            // update the sum of coefficients
             _alphaSum+=newAlpha;
-                        
+
             if (_verbose>2)
             {
-                cout << "---> Old alpha:  " << alpha << endl;
-                cout << "---> New alpha:  " << newAlpha << endl << flush;
+                cout << "---> Alpha (based on AdaBoost.MH):  " << alpha << endl;
+                cout << "---> Alpha (based on ARC-GV):       " << newAlpha << endl << flush;
             }
                         
                         
