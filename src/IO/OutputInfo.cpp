@@ -42,52 +42,7 @@
 #include "Utils/Utils.h"
 
 namespace MultiBoost {
-        
-    // -------------------------------------------------------------------------
-        
-    OutputInfo::OutputInfo(const string& outputInfoFile, bool customUpdate)
-    {
-        //some intializations
-        _customTablesUpdate = customUpdate;
-        
-        // open the stream
-        _outStream.open(outputInfoFile.c_str());
-                
-        // is it really open?
-        if ( !_outStream.is_open() )
-        {
-            cerr << "ERROR: cannot open the output steam (<" 
-                 << outputInfoFile << ">) for the step-by-step info!" << endl;
-            exit(1);
-        }
-        
-        _outputListString = defaultOutput;
-        _outputList.push_back(BaseOutputInfoType::createOutput(defaultOutput));
-    }
 
-    // -------------------------------------------------------------------------
-        
-    OutputInfo::OutputInfo(const string& outputInfoFile, const string & outList, bool customUpdate)
-    {
-        //internal intializations
-        _customTablesUpdate = customUpdate;
-        
-        _outputListString = outList;
-        getOutputListFromString(outList);
-        
-        // open the stream
-        _outStream.open(outputInfoFile.c_str());
-                
-        // is it really open?
-        if ( !_outStream.is_open() )
-        {
-            cerr << "ERROR: cannot open the output steam (<" 
-                 << outputInfoFile << ">) for the step-by-step info!" << endl;
-            exit(1);
-        }
-        
-    }
-    
     // -------------------------------------------------------------------------
         
     OutputInfo::OutputInfo(const nor_utils::Args& args, bool customUpdate, const string & clArg)
@@ -95,14 +50,12 @@ namespace MultiBoost {
         _customTablesUpdate = customUpdate;
         
         string outputInfoFile;
-        
         args.getValue(clArg, 0, outputInfoFile);
         
         if ( args.getNumValues(clArg) > 1)
         {
             string outList;
             args.getValue(clArg, 1, outList);
-            
             getOutputListFromString(outList, &args);
         }
         else
@@ -111,7 +64,13 @@ namespace MultiBoost {
         }
 
         // open the stream
-        _outStream.open(outputInfoFile.c_str());
+        
+        ios_base::openmode outputfileflag = ios_base::out;
+        if (args.hasArgument("resume") &&
+            !args.hasArgument("slowresumeprocess")) {
+            outputfileflag = ios_base::in | ios_base::out | ios_base::app;
+        }
+        _outStream.open(outputInfoFile.c_str(), outputfileflag);
                 
         // is it really open?
         if ( !_outStream.is_open() )
@@ -121,6 +80,61 @@ namespace MultiBoost {
             exit(1);
         }
         
+        // the header file
+        string headerFileName = outputInfoFile + ".header";
+        ios_base::openmode headerflag = ios_base::out;
+        if (args.hasArgument("resume")) {
+            headerflag = ios_base::in;
+        }
+        
+        _headerOutStream.open(headerFileName.c_str(), headerflag);
+        if ( !_headerOutStream.is_open() )
+        {
+            cerr << "ERROR: cannot open the header output steam (<"
+                 << headerFileName << ">) for the step-by-step info!" << endl;
+            exit(1);
+        }
+        
+        _timeBias = 0;
+        
+        if (args.hasArgument("resume") &&
+            !args.hasArgument("slowresumeprocess")) {
+            
+            // let's look for the position of the time
+            // column (if it exists) in the header
+            int position = -1, i = 0;
+            while (! _headerOutStream.eof()) {
+                string column;
+                _headerOutStream >> column;
+                if (column.compare("t") == 0) {
+                    position = i;
+                    break;
+                }
+                ++i;
+            }
+
+            // if the time actually belongs to the header
+            if (position >= 0 && _outStream.peek() != std::ifstream::traits_type::eof()) {
+                // if "t" belongs to the header and the outputfile is not empty
+                char buff[1];
+                int security = 100; //cause "while loops never trust young padawan"
+                while (buff[0] != ' ' && buff[0] != '\t') {
+                    _outStream.unget().unget();
+                    _outStream.read(buff, 1);
+                    --security;
+                    if (security == 0) {
+                        break;
+                    }
+                }
+                
+                if (security != 0) {
+                    _outStream >> _timeBias;
+                }
+                
+                _outStream.clear();
+                _outStream.seekp(0, ios_base::end);
+            }
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -159,36 +173,33 @@ namespace MultiBoost {
     void OutputInfo::outputHeader(const NameMap& namemap, bool outputIterations, bool outputTime, bool endline)
     { 
         if (outputIterations) {
-            _outStream << "t" << OUTPUT_SEPARATOR;
-        }        
+            _headerOutStream << "t" << OUTPUT_SEPARATOR;
+        }
         
         OutInfIt outputIt;
-        long numDatasets = _gTableMap.size();
+        long numDatasets = _gTableMap.size()  ;
 
         // the number of datasets used
         for (int i = 0; i < numDatasets; ++i) {
             for (outputIt = _outputList.begin(); outputIt != _outputList.end(); ++outputIt) {
-                (*outputIt)->outputHeader(_outStream, namemap);
-                _outStream << OUTPUT_SEPARATOR;
-                
-                // because the headers hold whithin few letters, we must fill the gap
-                if (outputIt+1 != _outputList.end())
-                    _outStream  << HEADER_FIELD_LENGTH;
-            }
-            if (i != numDatasets - 1) {
-//                _outStream << HEADER_FIELD_LENGTH;
-                separator();
+                (*outputIt)->outputHeader(_headerOutStream, namemap);
+                _headerOutStream << OUTPUT_SEPARATOR;
             }
         }
         
         if (outputTime) {
-            _outStream << OUTPUT_SEPARATOR  << "Time";
+            _headerOutStream << "Time" << OUTPUT_SEPARATOR;
         }
         
         if (endline) {
-            _outStream << endl;
+            _headerOutStream << endl << endl << "Column description:\n-------------------\n";
+            
+            // description of the different columns
+            for (outputIt = _outputList.begin(); outputIt != _outputList.end(); ++outputIt) {
+                (*outputIt)->outputDescription(_headerOutStream);
+                _headerOutStream << endl;
+            }
         }
-
     }
         
     // -------------------------------------------------------------------------
@@ -275,7 +286,7 @@ namespace MultiBoost {
         time_t seconds;
         seconds = time (NULL);
                 
-        _outStream << OUTPUT_SEPARATOR << (seconds - _beginingTime); // just output current time in seconds
+        _outStream << OUTPUT_SEPARATOR << (seconds - _beginingTime + _timeBias); // just output current time in seconds
     }
         
     // -------------------------------------------------------------------------
@@ -333,7 +344,7 @@ namespace MultiBoost {
         if ( type.compare("mar") == 0 ) return new MarginsOutput();
         if ( type.compare("edg") == 0 ) return new EdgeOutput();
         if ( type.compare("auc") == 0 ) return new AUCOutput();
-        if ( type.compare("tfr") == 0 ) return new TPRFPROutput();
+        if ( type.compare("roc") == 0 ) return new TPRFPROutput();
         if ( type.compare("sca") == 0 ) return new SoftCascadeOutput(*args); 
         if ( type.compare("pos") == 0 ) return new PosteriorsOutput();
         

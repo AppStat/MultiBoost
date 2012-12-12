@@ -44,7 +44,7 @@
 
 namespace MultiBoost {
 
-    REGISTER_LEARNER_NAME(UCBVHaarSingleStump, UCBVHaarSingleStumpLearner)
+
 
 
     map<int,FeatureDataUCBV> UCBVHaarSingleStumpLearner::_featuresData;

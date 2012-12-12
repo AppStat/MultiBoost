@@ -42,7 +42,7 @@ namespace MultiBoost {
 
 
 //REGISTER_LEARNER_NAME(Constant, ConstantLearner)
-    REGISTER_LEARNER(ConstantLearner)
+
 
     // ------------------------------------------------------------------------------
 

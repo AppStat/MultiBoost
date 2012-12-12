@@ -44,7 +44,7 @@
 namespace MultiBoost {
         
     //REGISTER_LEARNER_NAME(SingleStump, SingleStumpLearner)
-    REGISTER_LEARNER(SigmoidSingleStumpLearner)
+
     // ------------------------------------------------------------------------------
         
     void SigmoidSingleStumpLearner::declareArguments(nor_utils::Args& args)
@@ -381,7 +381,7 @@ namespace MultiBoost {
                 
                 
         const pair<vpIterator,vpIterator> dataBeginEnd = 
-            static_cast<SortedData*>(_pTrainingData)->getFileteredBeginEnd( colIdx );
+            static_cast<SortedData*>(_pTrainingData)->getFilteredBeginEnd( colIdx );
                 
                 
         const vpIterator dataBegin = dataBeginEnd.first;

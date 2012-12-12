@@ -98,40 +98,36 @@ namespace MultiBoost {
                 
         if ( !_outputInfoFile.empty() ) 
         {
-            // Baseline: constant classifier - goes into 0th iteration
-                        
-            BaseLearner* pConstantWeakHypothesis = pConstantWeakHypothesisSource->create() ;
-            pConstantWeakHypothesis->initLearningOptions(args);
-            pConstantWeakHypothesis->setTrainingData(pTrainingData);
-            AlphaReal constantEnergy = pConstantWeakHypothesis->run();
-                        
-            //pOutInfo = new OutputInfo(_outputInfoFile);
             pOutInfo = new OutputInfo(args);
             pOutInfo->initialize(pTrainingData);
-                        
+            
             if (pTestData)
                 pOutInfo->initialize(pTestData);
             pOutInfo->outputHeader(pTrainingData->getClassMap());
-                        
-            pOutInfo->outputIteration(-1);
-            pOutInfo->outputCustom(pTrainingData, pConstantWeakHypothesis);
             
-            if (pTestData != NULL)
+            if ( ! args.hasArgument("resume") )
             {
-                pOutInfo->separator();
-                pOutInfo->outputCustom(pTestData, pConstantWeakHypothesis);   
+                // Baseline: constant classifier - goes into 0th iteration
+                
+                BaseLearner* pConstantWeakHypothesis = pConstantWeakHypothesisSource->create() ;
+                pConstantWeakHypothesis->initLearningOptions(args);
+                pConstantWeakHypothesis->setTrainingData(pTrainingData);
+                pConstantWeakHypothesis->run();
+                
+                pOutInfo->outputIteration(-1);
+                pOutInfo->outputCustom(pTrainingData, pConstantWeakHypothesis);
+                if (pTestData != NULL)
+                {
+                    pOutInfo->separator();
+                    pOutInfo->outputCustom(pTestData, pConstantWeakHypothesis);
+                }
+                pOutInfo->outputCurrentTime();
+                pOutInfo->endLine();
+                
+                pOutInfo->initialize(pTrainingData);
+                if (pTestData)
+                    pOutInfo->initialize(pTestData);
             }
-                        
-            pOutInfo->outputCurrentTime();
-                        
-            pOutInfo->endLine(); 
-
-            pOutInfo->initialize(pTrainingData);
-                        
-            if (pTestData)
-                pOutInfo->initialize(pTestData);
-                        
-                        
         } else {
             cout << "Output file is empty!!!!" << endl;
             exit(-1);

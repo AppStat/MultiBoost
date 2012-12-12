@@ -44,7 +44,7 @@
 namespace MultiBoost {
 
 //REGISTER_LEARNER_NAME(SingleStump, SingleRegressionStumpLearner)
-    REGISTER_LEARNER(SingleRegressionStumpLearner)
+
 
     // ------------------------------------------------------------------------------
 
@@ -87,7 +87,7 @@ namespace MultiBoost {
             {
                 --numOfDimensions;
                 const pair<vpIterator,vpIterator> dataBeginEnd = 
-                    static_cast<SortedData*>(_pTrainingData)->getFileteredBeginEnd(j);
+                    static_cast<SortedData*>(_pTrainingData)->getFilteredBeginEnd(j);
                  
 
                 const vpIterator dataBegin = dataBeginEnd.first;
@@ -164,7 +164,7 @@ namespace MultiBoost {
 
    
         const pair<vpIterator,vpIterator> dataBeginEnd = 
-            static_cast<SortedData*>(_pTrainingData)->getFileteredBeginEnd( colIdx );
+            static_cast<SortedData*>(_pTrainingData)->getFilteredBeginEnd( colIdx );
          
 
         const vpIterator dataBegin = dataBeginEnd.first;

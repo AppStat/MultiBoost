@@ -124,15 +124,15 @@ namespace MultiBoost {
          * \remark Replaces getSortedBeginEnd() in earlier versions
          * \date 01/07/2011
          */                                                             
-        virtual pair<vpIterator,vpIterator> getFileteredBeginEnd(int colIdx);
+        virtual pair<vpIterator,vpIterator> getFilteredBeginEnd(int colIdx);
 
         /**
-         * The same as SoterdData::getFileteredBeginEnd but it returns reverse iterator.
-         * \ see SoterdData::getFileteredBeginEnd
+         * The same as SoterdData::getFilteredBeginEnd but it returns reverse iterator.
+         * \ see SoterdData::getFilteredBeginEnd
          * \date 01/07/2011
          */                                                             
                 
-        virtual pair<vpReverseIterator,vpReverseIterator> getFileteredReverseBeginEnd(int colIdx);
+        virtual pair<vpReverseIterator,vpReverseIterator> getFilteredReverseBeginEnd(int colIdx);
     protected:
                 
         /**

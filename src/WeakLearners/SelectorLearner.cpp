@@ -39,7 +39,7 @@
 namespace MultiBoost {
         
     //REGISTER_LEARNER_NAME(SingleStump, SelectorLearner)
-    REGISTER_LEARNER(SelectorLearner)
+
         
     // ------------------------------------------------------------------------------
         

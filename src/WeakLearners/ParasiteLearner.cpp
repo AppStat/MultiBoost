@@ -43,7 +43,7 @@
 namespace MultiBoost {
 
 //REGISTER_LEARNER_NAME(Parasite, ParasiteLearner)
-    REGISTER_LEARNER(ParasiteLearner)
+
 
     // -----------------------------------------------------------------------
 

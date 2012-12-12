@@ -169,6 +169,8 @@ namespace MultiBoost {
         vector<BaseLearner*> _baseLearners; //!< the learners of the product
         int _numBaseLearners;
         vector< vector<char> > _savedLabels; //!< original labels saved before run
+        bool _stopAfterFirstRound; //!<if false: continue looping over base classifiers 
+                                   //until the edge increases
 
     };
 

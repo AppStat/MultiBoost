@@ -566,7 +566,7 @@ namespace MultiBoost {
         OutputInfo* pOutInfo = NULL;
 
         if ( !_outputInfoFile.empty() )
-            pOutInfo = new OutputInfo(_outputInfoFile, "err");
+            pOutInfo = new OutputInfo(_args);
 
         // Creating the results structures. See file Structures.h for the
         // PointResults structure
@@ -776,14 +776,7 @@ namespace MultiBoost {
         
         if ( !_outputInfoFile.empty() )
         {
-            if ( _args.getNumValues("outputinfo") > 1 ) 
-            {
-                pOutInfo = new OutputInfo(_args);;
-            } 
-            else 
-            {
-                pOutInfo = new OutputInfo(_outputInfoFile, "e01hamauc", false);
-            }
+            pOutInfo = new OutputInfo(_args);
             
         }
         

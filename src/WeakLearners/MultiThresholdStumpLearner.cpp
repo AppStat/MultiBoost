@@ -40,7 +40,7 @@
 #include <limits> // for numeric_limits<>
 namespace MultiBoost {
 
-    REGISTER_LEARNER(MultiThresholdStumpLearner)
+
 
     // ------------------------------------------------------------------------------
 
@@ -74,7 +74,7 @@ namespace MultiBoost {
                 --numOfDimensions;
                 const pair<vpIterator, vpIterator>
                     dataBeginEnd =
-                    static_cast<SortedData*> (_pTrainingData)->getFileteredBeginEnd(
+                    static_cast<SortedData*> (_pTrainingData)->getFilteredBeginEnd(
                         j);
 
                 const vpIterator dataBegin = dataBeginEnd.first;

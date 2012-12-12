@@ -43,7 +43,7 @@
 namespace MultiBoost {
 
     //REGISTER_LEARNER_NAME(Product, ProductLearner)
-    REGISTER_LEARNER(ProductLearner)
+
 
     // -----------------------------------------------------------------------
 
@@ -56,6 +56,14 @@ namespace MultiBoost {
                              "  and the number of base learners to be multiplied\n"
                              "  Don't forget to add its parameters\n",
                              2, "<baseLearnerType> <numBaseLearners>");
+        
+        args.declareArgument("loop", 
+                             "If set, we continue looping over base classifiers until the edge" 
+                             "stops increasing, otherwise we stop after at most <numBaseLearners>"
+                             "iterations\n",
+                             0, "");
+        
+        
 
     }
 
@@ -68,6 +76,12 @@ namespace MultiBoost {
         string baseLearnerName;
         args.getValue("baselearnertype", 0, baseLearnerName);   
         args.getValue("baselearnertype", 1, _numBaseLearners);   
+
+        // --loop: continue looping over base classifiers until the edge decreases
+        if ( args.hasArgument("loop") )
+            _stopAfterFirstRound = false;
+        else
+            _stopAfterFirstRound = true;
 
         // get the registered weak learner (type from name)
         BaseLearner* pWeakHypothesisSource = 
@@ -117,12 +131,16 @@ namespace MultiBoost {
         int ib = -1;
         while (1) {
             ib += 1;
+            // cycle through _numBaseLearners base learners as long as the edge increases
             if (ib >= _numBaseLearners) {
+                if (_stopAfterFirstRound)
+                    break;
                 ib = 0;
                 firstLoop = false;
             }
             previousEnergy = energy;
             previousAlpha = _alpha;
+            // to avoid memory leak
             if (pPreviousBaseLearner)
                 delete pPreviousBaseLearner;
             if ( !firstLoop ) {
@@ -135,7 +153,8 @@ namespace MultiBoost {
                         hx = _baseLearners[ib]->classify(_pTrainingData,i,l);
                         if ( hx < 0 )
                             labels[l].y *= -1;
-                        else if ( hx == 0 ) { // have to redo the multiplications, haven't been tested
+                        else if ( hx == 0 ) { // have to redo the multiplications from scratch
+                            labels[l].y = _savedLabels[i][l];
                             for(int ib1 = 0; ib1 < _numBaseLearners && labels[l].y != 0; ++ib1) {
                                 if (ib != ib1) {
                                     hx = _baseLearners[ib1]->classify(_pTrainingData,i,l);

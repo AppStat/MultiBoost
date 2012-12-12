@@ -259,6 +259,9 @@ namespace MultiBoost {
          */
         int      getNumExamplesPerClass(int classIdx) const 
         { return _nExamplesPerClass[classIdx]; }
+
+        vector<FeatureReal>& getMostFrequentValuePerFeature() { return _pData->getMostFrequentValuePerFeature(); }
+
                 
         /**
          * Set the indices of subset we use

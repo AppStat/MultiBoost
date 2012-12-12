@@ -44,7 +44,7 @@
 namespace MultiBoost {
         
     //REGISTER_LEARNER_NAME(SingleStump, SingleStumpLearner)
-    REGISTER_LEARNER(OneClassStumpLearner)
+
         
     // ------------------------------------------------------------------------------
         
@@ -88,7 +88,7 @@ namespace MultiBoost {
                 //if ( static_cast<SortedData*>(_pTrainingData)->isAttributeEmpty( j ) ) continue;
                                 
                 const pair<vpIterator,vpIterator> dataBeginEnd = 
-                    static_cast<SortedData*>(_pTrainingData)->getFileteredBeginEnd(j);
+                    static_cast<SortedData*>(_pTrainingData)->getFilteredBeginEnd(j);
                                 
                                 
                 const vpIterator dataBegin = dataBeginEnd.first;
@@ -170,7 +170,7 @@ namespace MultiBoost {
             halfTheta = 0;
                 
         const pair<vpIterator,vpIterator> dataBeginEnd = 
-            static_cast<SortedData*>(_pTrainingData)->getFileteredBeginEnd( colIdx );
+            static_cast<SortedData*>(_pTrainingData)->getFilteredBeginEnd( colIdx );
                 
                 
         const vpIterator dataBegin = dataBeginEnd.first;
@@ -231,7 +231,7 @@ namespace MultiBoost {
         for (int j = 0; j < (int)colIndexes.size(); ++j)
         {
             const pair<vpIterator,vpIterator> dataBeginEnd = 
-                static_cast<SortedData*>(_pTrainingData)->getFileteredBeginEnd(colIndexes[j]);
+                static_cast<SortedData*>(_pTrainingData)->getFilteredBeginEnd(colIndexes[j]);
                         
                         
             const vpIterator dataBegin = dataBeginEnd.first;

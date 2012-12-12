@@ -134,6 +134,45 @@ namespace MultiBoost {
          \endverbatim
         */
         void readSimpleLabels(istringstream& ss, vector<Label>& labels, NameMap& classMap);
+
+        /**
+         * Read labels declared in the standard arff format, but specified as 
+         * multiple prefixed "class" Attributes, and with a value that 
+         * can be positive, or negative.
+         * i.e.:
+         * \verbatim
+         @ATTRIBUTE sepallength  NUMERIC
+         @ATTRIBUTE sepalwidth   NUMERIC
+         @ATTRIBUTE petallength  NUMERIC
+         @ATTRIBUTE petalwidth   NUMERIC
+         @ATTRIBUTE classIris-setosa NUMERIC
+         @ATTRIBUTE classIris-versicolor NUMERIC
+         @ATTRIBUTE classIris-virginica NUMERIC
+         @DATA
+         4,  2,  4,  2, +1, -2, -1
+         25, 23,  1,  0, -1, 0, +1
+         0,  1, 10, 12, -1, -3, +1
+         \endverbatim
+         * In this case the labels the the example will respectively be:
+         \verbatim
+         +1, -1, -1
+         -1,  0, +1
+         -1, -1, +1
+         \endverbatim
+         * and weights :
+         \verbatim
+         1, 2, 1,
+         1, 0, 1
+         1, 3, 1
+         \endverbatim
+        */
+        void readDenseMultiLabels(istringstream& ss, vector<Label>& labels, NameMap& classMap);
+
+        /**
+         * Read labels in the same manner than \verb+readDenseMultiLabels+, but with
+         * sparse data (hence sparse labels, then)
+         */
+        void readSparseMultiLabels(istringstream& ss, vector<Label>& labels, NameMap& classMap);
                 
         /**
          * Read sparse labels declared in a non-standard arff variant:
@@ -176,11 +215,14 @@ namespace MultiBoost {
         eTokenType getNextTokenType(ifstream& in);
                 
         int            _numAttributes;
+        int                        _lastIdx;
         string         _headerFileName;
                 
         locale         _denseLocale;
         locale         _sparseLocale;
         bool           _hasName;
+        bool           _hasAttributeClassForm;        
+
     };
         
     // -----------------------------------------------------------------------------

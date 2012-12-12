@@ -47,7 +47,7 @@
 namespace MultiBoost {
 
     //REGISTER_LEARNER_NAME(SingleStump, BanditSingleSparseStump)
-    REGISTER_LEARNER(BanditSingleSparseStump)
+
 
     // ------------------------------------------------------------------------------
 
@@ -137,11 +137,11 @@ namespace MultiBoost {
 
 
             const pair<vpReverseIterator,vpReverseIterator> dataBeginEnd = 
-                static_cast<SortedData*>(_pTrainingData)->getFileteredReverseBeginEnd( _armsForPulling[i] );
+                static_cast<SortedData*>(_pTrainingData)->getFilteredReverseBeginEnd( _armsForPulling[i] );
 
             /*
               const pair<vpIterator,vpIterator> dataBeginEnd = 
-              static_cast<SortedData*>(_pTrainingData)->getFileteredBeginEnd( _armsForPulling[i] );
+              static_cast<SortedData*>(_pTrainingData)->getFilteredBeginEnd( _armsForPulling[i] );
             */
 
             const vpReverseIterator dataBegin = dataBeginEnd.first;
@@ -250,7 +250,7 @@ namespace MultiBoost {
 
 
         const pair<vpReverseIterator,vpReverseIterator> dataBeginEnd = 
-            static_cast<SortedData*>(_pTrainingData)->getFileteredReverseBeginEnd( colIdx );
+            static_cast<SortedData*>(_pTrainingData)->getFilteredReverseBeginEnd( colIdx );
 
 
         const vpReverseIterator dataBegin = dataBeginEnd.first;

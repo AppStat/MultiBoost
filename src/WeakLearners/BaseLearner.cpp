@@ -124,7 +124,7 @@ namespace MultiBoost {
             sHypothesis = new AdaBoostMHLearner();
         } else if ( sHypothesisName.compare( "FilterBoost" ) == 0 ) {
             sHypothesis = new FilterBoostLearner();
-	} else if ( sHypothesisName.compare( "ArcGV" ) == 0 ) {
+        } else if ( sHypothesisName.compare( "ArcGV" ) == 0 ) {
             sHypothesis = new ArcGVLearner();                       
         } else if ( sHypothesisName.compare( "VJcascade" ) == 0 ) {
             sHypothesis = new VJCascadeLearner();

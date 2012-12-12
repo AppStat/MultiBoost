@@ -46,7 +46,7 @@
 namespace MultiBoost {
         
     //REGISTER_LEARNER_NAME(Product, TreeLearner)
-    REGISTER_LEARNER(TreeLearner)
+
         
     // -----------------------------------------------------------------------
         

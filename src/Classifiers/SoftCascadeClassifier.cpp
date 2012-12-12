@@ -132,9 +132,8 @@ namespace MultiBoost {
             pOutInfo->initialize(pData);
             
             pOutInfo->outputHeader(pData->getClassMap(), true, true, false);
-            pOutInfo->separator();
             pOutInfo->outputUserHeader("thresh");
-            pOutInfo->endLine();
+            pOutInfo->headerEndLine();
         }
         
                 

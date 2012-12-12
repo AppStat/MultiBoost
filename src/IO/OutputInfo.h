@@ -96,22 +96,6 @@ namespace MultiBoost {
     class OutputInfo
     {
     public:
-                
-        /**
-         * The constructor. Create the object and open the output file.
-         * \param outputInfoFile The name of the file which will be updated
-         * with the data.
-         * \date 14/11/2005
-         */
-        explicit OutputInfo(const string& outputInfoFile, bool customUpdate = false);
-        
-        /**
-         * The constructor. Create the object and open the output file.
-         * \param outputInfoFile The name of the file which will be updated
-         * \param outList The different outputs to print
-         * \date 20/06/2011
-         */
-        OutputInfo(const string& outputInfoFile, const string & outList, bool customUpdate = false);
                         
         /**
          * The constructor. Create the object and open the output file.
@@ -125,6 +109,8 @@ namespace MultiBoost {
         /**
          * Forces the choice of the output information 
          * \param list The list of the output names (eg. err, auc etc.)
+         * \param append If true, "list" is added to the other outputs, otherwise, it 
+         * replace them.
          * \date 04/07/2011
          */
         void setOutputList(const string& list, bool append = false, const nor_utils::Args* args = NULL);
@@ -159,7 +145,7 @@ namespace MultiBoost {
          */             
         AlphaReal getSumOfAlphas( InputData* pData )
         {
-	    return _alphaSums[pData];
+            return _alphaSums[pData];
         }
                 
 
@@ -179,8 +165,9 @@ namespace MultiBoost {
          * \date 16/11/2005
          */
         void endLine() { _outStream << endl; }
+        void headerEndLine() { _headerOutStream << endl; }
 
-                
+        
         /**
          * Separator in the file stream.
          * \date 20/06/2011
@@ -194,7 +181,7 @@ namespace MultiBoost {
         
         void outputUserHeader( const string& h )
         {
-            _outStream << h;
+            _headerOutStream << h << OUTPUT_SEPARATOR;
         }
                 
         table& getTable( InputData* pData )
@@ -249,9 +236,11 @@ namespace MultiBoost {
     protected:
                 
                 
-        ofstream                _outStream; //!< The output stream 
-                
-        time_t                             _beginingTime;
+        fstream                _outStream; //!< The output stream 
+        
+        time_t                  _beginingTime;
+        
+        time_t                  _timeBias;
         
         
         // TODO: refactoring : replace the general 
@@ -313,6 +302,11 @@ namespace MultiBoost {
          * \date 04/07/2011
          */
         bool _customTablesUpdate;
+        
+        /**
+         * The header output stream
+         */
+        fstream _headerOutStream;
                 
     };
     
@@ -339,7 +333,7 @@ namespace MultiBoost {
         BaseOutputInfoType(const nor_utils::Args& args) {};
         
         /*
-          Computes the output it is specialized in and print it.
+          Compute the output it is specialized in and print it.
           * \param outStream The stream where the output is directed to
           * \param pData The input data.
           * \param pWeakHypothesis The current weak hypothesis.
@@ -355,14 +349,21 @@ namespace MultiBoost {
                                       BaseLearner* pWeakHypothesis = 0) = 0;
         
         /**
-         * Prints the header 
+         * Print the header 
          * \param outStream The stream where the output is directed to
          * \param namemap The structure that contains the class information ( \see NameMap )
          * \date 17/06/2011
          */
         virtual void outputHeader(ostream& outStream, const NameMap& namemap) = 0;
-        
-        /* 
+
+        /**
+         * Print a detailed description of the output.
+         * \param outStream The stream where the output is directed to
+         * \date 12/12/2012
+         */
+        virtual void outputDescription(ostream& outStream) {};
+
+        /*
          * The creation method of the factory
          */
         static BaseOutputInfoType* createOutput(string type, const nor_utils::Args* args = NULL);
@@ -427,6 +428,10 @@ namespace MultiBoost {
         
         //////////////////////////////////////////////////////////////////////////////////////////////
         
+        void outputDescription(ostream& outStream) { outStream << "r01: Restricted Zero-One Error (error = min positive class score < max negative class score)";} ;
+
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
         void computeAndOutput(ostream& outStream, InputData* pData, 
                               map<InputData*, table>& gTableMap, 
                               map<InputData*, table>& marginsTableMap, 
@@ -447,6 +452,10 @@ namespace MultiBoost {
         
         void outputHeader(ostream& outStream, const NameMap& namemap) { outStream << "e01" ;}
         
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
+        void outputDescription(ostream& outStream) { outStream << "e01: Zero-One Error (error = max positive class score < max negative class score)";} ;
+
         //////////////////////////////////////////////////////////////////////////////////////////////
         
         void computeAndOutput(ostream& outStream, InputData* pData, 
@@ -471,6 +480,10 @@ namespace MultiBoost {
         
         //////////////////////////////////////////////////////////////////////////////////////////////
         
+        void outputDescription(ostream& outStream) { outStream << "w01: Weighted Zero-One Error (error = max positive class score < max negative class score)";} ;
+
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
         void computeAndOutput(ostream& outStream, InputData* pData, 
                               map<InputData*, table>& gTableMap, 
                               map<InputData*, table>& marginsTableMap, 
@@ -482,7 +495,7 @@ namespace MultiBoost {
     //////////////////////////////////////////////////////////////////////////////////////////////
     
     /**
-     * The weighted 0-1 error. 
+     * The hamming error. 
      * \date 19/07/2011
      */
     class HammingErrorOutput : public BaseOutputInfoType {
@@ -493,6 +506,10 @@ namespace MultiBoost {
         
         //////////////////////////////////////////////////////////////////////////////////////////////
         
+        void outputDescription(ostream& outStream) { outStream << "ham: Hamming Error";} ;
+
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
         void computeAndOutput(ostream& outStream, InputData* pData, 
                               map<InputData*, table>& gTableMap, 
                               map<InputData*, table>& marginsTableMap, 
@@ -503,7 +520,7 @@ namespace MultiBoost {
     //////////////////////////////////////////////////////////////////////////////////////////////
     
     /**
-     * The weighted 0-1 error. 
+     * The weighted hamming error. 
      * \date 19/07/2011
      */
     class WeightedHammingErrorOutput : public BaseOutputInfoType {
@@ -512,6 +529,10 @@ namespace MultiBoost {
         
         void outputHeader(ostream& outStream, const NameMap& namemap) { outStream << "wha" ;}
         
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
+        void outputDescription(ostream& outStream) { outStream << "wha: Weighted Hamming Error";} ;
+
         //////////////////////////////////////////////////////////////////////////////////////////////
         
         void computeAndOutput(ostream& outStream, InputData* pData, 
@@ -526,7 +547,7 @@ namespace MultiBoost {
     //////////////////////////////////////////////////////////////////////////////////////////////
     
     /**
-     * The weighted error 
+     * The weighted (restricted) error 
      * \date 20/06/2011
      */
     class WeightedErrorOutput : public BaseOutputInfoType {
@@ -535,6 +556,10 @@ namespace MultiBoost {
         
         void outputHeader(ostream& outStream, const NameMap& namemap) { outStream << "werr" ;}
         
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
+        void outputDescription(ostream& outStream) { outStream << "werr: Weighted Restricted Error (error = min positive class score < max negative class score)";} ;
+
         //////////////////////////////////////////////////////////////////////////////////////////////
         
         void computeAndOutput(ostream& outStream, InputData* pData, 
@@ -562,9 +587,13 @@ namespace MultiBoost {
             
             const int numClasses = namemap.getNumNames();
             for (int i = 0; i < numClasses; ++i ) {
-                outStream << OUTPUT_SEPARATOR << HEADER_FIELD_LENGTH <<  "->[" << namemap.getNameFromIdx(i).substr(0,3) << "]" ;}
+                outStream << OUTPUT_SEPARATOR <<  "balerr[" << namemap.getNameFromIdx(i) << "]" ;}
         }
-
+        
+        
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
+        void outputDescription(ostream& outStream) { outStream << "balerr: Balanced Error (see http://www.kddcup-orange.com/evaluation.php)";} ;
         
         //////////////////////////////////////////////////////////////////////////////////////////////
         
@@ -588,6 +617,10 @@ namespace MultiBoost {
         
         void outputHeader(ostream& outStream, const NameMap& namemap) { outStream <<  "mae" << OUTPUT_SEPARATOR << HEADER_FIELD_LENGTH << "mse";}
         
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
+        void outputDescription(ostream& outStream) { outStream << "mae: MAE Error";} ;
+
         //////////////////////////////////////////////////////////////////////////////////////////////
         
         void computeAndOutput(ostream& outStream, InputData* pData, 
@@ -630,6 +663,10 @@ namespace MultiBoost {
         
         //////////////////////////////////////////////////////////////////////////////////////////////
         
+        void outputDescription(ostream& outStream) { outStream << "min_mar: Minimum Margin";} ;
+
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
         void computeAndOutput(ostream& outStream, InputData* pData, 
                               map<InputData*, table>& gTableMap, 
                               map<InputData*, table>& marginsTableMap, 
@@ -653,6 +690,10 @@ namespace MultiBoost {
         
         void outputHeader(ostream& outStream, const NameMap& namemap) { outStream << "edge" ;}
         
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
+//        void outputDescription(ostream& outStream) { outStream << "edge: Edge";} ;
+
         //////////////////////////////////////////////////////////////////////////////////////////////
         
         void computeAndOutput(ostream& outStream, InputData* pData, 
@@ -679,9 +720,14 @@ namespace MultiBoost {
             outStream << "auc" ;
             const int numClasses = namemap.getNumNames();
             for (int i = 0; i < numClasses; ++i ) {
-                outStream << OUTPUT_SEPARATOR << HEADER_FIELD_LENGTH << "->[" << namemap.getNameFromIdx(i).substr(0,3) << "]" ;}
+                outStream << OUTPUT_SEPARATOR << "auc[" << namemap.getNameFromIdx(i) << "]" ;}
 
         }
+        
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
+        void outputDescription(ostream& outStream) { outStream << "auc: Area Under The ROC Curve";} ;
+
         
         //////////////////////////////////////////////////////////////////////////////////////////////
         
@@ -710,14 +756,18 @@ namespace MultiBoost {
             
             const int numClasses = namemap.getNumNames();
             for (int i = 0; i < numClasses; ++i ) {
-                outStream << OUTPUT_SEPARATOR << HEADER_FIELD_LENGTH << "->[" << namemap.getNameFromIdx(i).substr(0,3) << "]" ;}
+                outStream << OUTPUT_SEPARATOR << "tpr[" << namemap.getNameFromIdx(i) << "]" ;}
             
-            outStream << OUTPUT_SEPARATOR << HEADER_FIELD_LENGTH << "fpr" ;
+            outStream << OUTPUT_SEPARATOR << "fpr" ;
             for (int i = 0; i < numClasses; ++i ) {
-                outStream << OUTPUT_SEPARATOR << HEADER_FIELD_LENGTH << "->[" << namemap.getNameFromIdx(i).substr(0,3) << "]" ;}
+                outStream << OUTPUT_SEPARATOR << "fpr[" << namemap.getNameFromIdx(i) << "]" ;}
 
         }
         
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
+        void outputDescription(ostream& outStream) { outStream << "tpr/fpr: True and False Positive Rates";} ;
+
         //////////////////////////////////////////////////////////////////////////////////////////////
         
         void computeAndOutput(ostream& outStream, InputData* pData, 
@@ -769,12 +819,16 @@ namespace MultiBoost {
         void outputHeader(ostream& outStream, const NameMap& namemap) 
         {
             outStream   << "err" << OUTPUT_SEPARATOR
-                        << HEADER_FIELD_LENGTH << "auc" << OUTPUT_SEPARATOR
-                        << HEADER_FIELD_LENGTH << "fpr" << OUTPUT_SEPARATOR
-                        << HEADER_FIELD_LENGTH << "tpr" << OUTPUT_SEPARATOR
-                        << HEADER_FIELD_LENGTH << "nbeval" ;
+                        << "auc" << OUTPUT_SEPARATOR
+                        << "fpr" << OUTPUT_SEPARATOR
+                        << "tpr" << OUTPUT_SEPARATOR
+                        << "nbeval" ;
         }
         
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
+        void outputDescription(ostream& outStream) {} ;
+
         //////////////////////////////////////////////////////////////////////////////////////////////
         
         void computeAndOutput(ostream& outStream, InputData* pData, 
@@ -838,12 +892,16 @@ namespace MultiBoost {
         void outputHeader(ostream& outStream, const NameMap& namemap) 
         {
             outStream   << "err" << OUTPUT_SEPARATOR
-                        << HEADER_FIELD_LENGTH << "auc" << OUTPUT_SEPARATOR
-                        << HEADER_FIELD_LENGTH << "fpr" << OUTPUT_SEPARATOR
-                        << HEADER_FIELD_LENGTH << "tpr" << OUTPUT_SEPARATOR
-                        << HEADER_FIELD_LENGTH << "nbeval" ;
+                        << "auc" << OUTPUT_SEPARATOR
+                        << "fpr" << OUTPUT_SEPARATOR
+                        << "tpr" << OUTPUT_SEPARATOR
+                        << "nbeval" ;
         }
         
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
+        void outputDescription(ostream& outStream) {} ;
+
         //////////////////////////////////////////////////////////////////////////////////////////////
         
         void computeAndOutput(ostream& outStream, InputData* pData, 
@@ -887,6 +945,10 @@ namespace MultiBoost {
         
         void outputHeader(ostream& outStream, const NameMap& namemap) {}
         
+        //////////////////////////////////////////////////////////////////////////////////////////////
+        
+        void outputDescription(ostream& outStream) {} ;
+
         //////////////////////////////////////////////////////////////////////////////////////////////
         
         void computeAndOutput(ostream& outStream, InputData* pData, 

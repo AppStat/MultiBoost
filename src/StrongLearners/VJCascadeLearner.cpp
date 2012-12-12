@@ -589,15 +589,15 @@ namespace MultiBoost {
         VJCascadeClassifier classifier(args, _verbose);
                 
         // -cmatrix <dataFile> <shypFile>
-        if ( args.hasArgument("cmatrix") )
+        if ( args.getNumValues("cmatrix") == 2 )
         {
             string testFileName = args.getValue<string>("cmatrix", 0);
             string shypFileName = args.getValue<string>("cmatrix", 1);
                         
             classifier.printConfusionMatrix(testFileName, shypFileName);
         }
-        // -cmatrixfile <dataFile> <shypFile> <outFile>
-        else if ( args.hasArgument("cmatrixfile") )
+        // -cmatrix <dataFile> <shypFile> <outFile>
+        else if ( args.getNumValues("cmatrix") == 3)
         {
             string testFileName = args.getValue<string>("cmatrix", 0);
             string shypFileName = args.getValue<string>("cmatrix", 1);

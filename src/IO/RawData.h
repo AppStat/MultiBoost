@@ -244,7 +244,8 @@ namespace MultiBoost {
         vector<Example>::iterator rawEnd() {return _data.end();}
                 
         vector< int >&  getExamplesPerClass() { return _nExamplesPerClass; }
-                
+        vector<FeatureReal>& getMostFrequentValuePerFeature() { return _mostFrequentValuePerFeature; }
+
         // for debug
         void outputData();
     protected:
@@ -252,6 +253,7 @@ namespace MultiBoost {
         int           _numExamples;  //!<  The number of examples.
         int           _numClasses;  //!<  The number of classes.
         vector<int>   _nExamplesPerClass;   //!< The number of examples per class.
+        vector<FeatureReal> _mostFrequentValuePerFeature; //!< The most frequent value used in each feature
                 
         eFileFormat   _fileFormat;
                 

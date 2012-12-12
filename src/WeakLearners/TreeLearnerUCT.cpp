@@ -44,7 +44,7 @@
 namespace MultiBoost {
 
     //REGISTER_LEARNER_NAME(Product, TreeLearnerUCT)
-    REGISTER_LEARNER(TreeLearnerUCT)
+
     int TreeLearnerUCT::_numOfCalling = 0; //number of the single stump learner have been called
     InnerNodeUCTSparse TreeLearnerUCT::_root;
 

@@ -41,14 +41,6 @@ namespace MultiBoost {
         
     // ------------------------------------------------------------------------------
         
-    // Register the features
-    REGISTER_HAAR_FEATURE(2h, HaarFeature_2H);
-    REGISTER_HAAR_FEATURE(2v, HaarFeature_2V);
-    REGISTER_HAAR_FEATURE(3h, HaarFeature_3H);
-    REGISTER_HAAR_FEATURE(3v, HaarFeature_3V);
-    REGISTER_HAAR_FEATURE(4q, HaarFeature_4SQ);
-        
-    // ------------------------------------------------------------------------------
         
     HaarFeature::HaarFeature(short width, short height, const string& shortName, 
                              const string& name, eFeatureType type)

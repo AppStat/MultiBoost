@@ -157,11 +157,13 @@
 #include "IO/OutputInfo.h" // for --encode
 #include "Bandits/GenericBanditAlgorithm.h" 
 
+#include "Registrations.h" // for learner and haar features registrations
+
 using namespace std;
 using namespace MultiBoost;
 
 
-static const char CURRENT_VERSION[] = "1.1.05";
+static const char CURRENT_VERSION[] = MB_CURRENT_VERSION;
 
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
@@ -334,10 +336,10 @@ int main(int argc, const char* argv[])
     args.declareArgument("train", "Performs training.", 2, "<dataFile> <nInterations>");
     args.declareArgument("traintest", "Performs training and test at the same time.", 3, "<trainingDataFile> <testDataFile> <nInterations>");
     args.declareArgument("trainvalidtest", "Performs training and test at the same time.", 4, "<trainingDataFile> <validDataFile> <testDataFile> <nInterations>");
-    args.declareArgument("test", "Test the model.", 3, "<dataFile> <numIters> <shypFile>");
+    args.declareArgument("test", "Test the model.", 3, "<dataFile> <shypFile> <numIters>");
     args.declareArgument("test", "Test the model and output the results", 4, "<datafile> <shypFile> <numIters> <outFile>");
     args.declareArgument("cmatrix", "Print the confusion matrix for the given model.", 2, "<dataFile> <shypFile>");
-    args.declareArgument("cmatrixfile", "Print the confusion matrix with the class names to a file.", 3, "<dataFile> <shypFile> <outFile>");
+    args.declareArgument("cmatrix", "Print the confusion matrix with the class names to a file.", 3, "<dataFile> <shypFile> <outFile>");
     args.declareArgument("posteriors", "Output the posteriors for each class, that is the vector-valued discriminant function for the given dataset and model.", 4, "<dataFile> <shypFile> <outFile> <numIters>");
     args.declareArgument("posteriors", "Output the posteriors for each class, that is the vector-valued discriminant function for the given dataset and model periodically.", 5, "<dataFile> <shypFile> <outFile> <numIters> <period>");    
                 
@@ -360,7 +362,7 @@ int main(int argc, const char* argv[])
                          "AdaBoost (default)\n"
                          "FilterBoost\n"
                          "SoftCascade\n"
-			 "ArcGV\n"
+                         "ArcGV\n"
                          "VJcascade\n", 1, "<stronglearner>" );
         
     args.declareArgument("slowresumeprocess", "Computes every statitstic in each iteration (slow resume)\n"

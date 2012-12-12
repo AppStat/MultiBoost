@@ -71,10 +71,10 @@ namespace MultiBoost {
 
         //TODO : create an abstract classe for cascade compliant base learners and accept only its offspring!
         // get the name of the learner
-        _baseLearnerName = "HaarSingleStumpLearner";
+        _baseLearnerName = defaultLearner;
         if ( args.hasArgument("learnertype") )
-            //                  args.getValue("learnertype", 0, _baseLearnerName);
-            cout << "! Only HaarSingleStumpeLearner is allowed.\n";
+            args.getValue("learnertype", 0, _baseLearnerName);
+//            cout << "! Only HaarSingleStumpeLearner is allowed.\n";
         
         // -train <dataFile> <nInterations>
         if ( args.hasArgument("train") )
@@ -446,50 +446,34 @@ namespace MultiBoost {
             if (pTestData)
                 pOutInfo->initialize(pTestData);
             pOutInfo->outputHeader(pTrainingData->getClassMap(), true, true, false);
-            pOutInfo->separator();
             pOutInfo->outputUserHeader("thresh");
-            pOutInfo->endLine();
+            pOutInfo->headerEndLine();
         }
         
         
-        ofstream trainPosteriorsFile;
-        ofstream testPosteriorsFile;
+//        ofstream trainPosteriorsFile;
+//        ofstream testPosteriorsFile;
         
-        if (! _posteriorsFileName.empty()) {
-            string trainPosteriorsFileName = "train" + _posteriorsFileName;
-            string testPosteriorsFileName = "test" + _posteriorsFileName;
-            
-            trainPosteriorsFile.open(trainPosteriorsFileName.c_str());
-            if ( ! trainPosteriorsFile.is_open() ) {
-                cout << "Error : Cannot open posteriors file !" << endl;
-                exit(-1);
-            }            
-
-            testPosteriorsFile.open(testPosteriorsFileName.c_str());
-            if ( ! testPosteriorsFile.is_open() ) {
-                cout << "Error : Cannot open posteriors file !" << endl;
-                exit(-1);
-            }            
-            
-        }
-        
-        OutputInfo* pTrainPosteriorsOut = NULL;
-        OutputInfo* pTestPosteriorsOut = NULL;
         
         const NameMap& namemap = pTrainingData->getClassMap();
         _positiveLabelIndex = namemap.getIdxFromName(_positiveLabelName);
+
+        // FIXME: output posteriors
+
+//        OutputInfo* pTrainPosteriorsOut = NULL;
+//        OutputInfo* pTestPosteriorsOut = NULL;
         
-        if (! _trainPosteriorsFileName.empty()) {
-            pTrainPosteriorsOut = new OutputInfo(_trainPosteriorsFileName, "pos", true);
-            pTrainPosteriorsOut->initialize(pTrainingData);
-            dynamic_cast<PosteriorsOutput*>( pTrainPosteriorsOut->getOutputInfoObject("pos") )->addClassIndex(_positiveLabelIndex );
-        }
+//        if (! _trainPosteriorsFileName.empty()) {
+//            pTrainPosteriorsOut = new OutputInfo(_trainPosteriorsFileName, "pos", true);
+//            pTrainPosteriorsOut->initialize(pTrainingData);
+//            dynamic_cast<PosteriorsOutput*>( pTrainPosteriorsOut->getOutputInfoObject("pos") )->addClassIndex(_positiveLabelIndex );
+//        }
         
-        if (! _testPosteriorsFileName.empty() && !_testFileName.empty() ) {
-            pTestPosteriorsOut = new OutputInfo(_testPosteriorsFileName, "pos", true);
-            pTestPosteriorsOut->initialize(pTestData);
-            dynamic_cast<PosteriorsOutput*>( pTestPosteriorsOut->getOutputInfoObject("pos") )->addClassIndex(_positiveLabelIndex );            
-        }
+//        if (! _testPosteriorsFileName.empty() && !_testFileName.empty() ) {
+//            pTestPosteriorsOut = new OutputInfo(_testPosteriorsFileName, "pos", true);
+//            pTestPosteriorsOut->initialize(pTestData);
+//            dynamic_cast<PosteriorsOutput*>( pTestPosteriorsOut->getOutputInfoObject("pos") )->addClassIndex(_positiveLabelIndex );            
+//        }
         
         const int numExamples = pTrainingData->getNumExamples();
 
@@ -617,15 +601,15 @@ namespace MultiBoost {
             // output the iteration results
             printOutputInfo(pOutInfo, t, pTrainingData, pTestData, selectedWeakHypothesis, r);
                         
-            if (pTrainPosteriorsOut) {
-                pTrainPosteriorsOut->setTable(pTrainingData, pOutInfo->getTable(pTrainingData));
-                pTrainPosteriorsOut->outputCustom(pTrainingData);
-            }
-
-            if (pTestPosteriorsOut) {
-                pTestPosteriorsOut->setTable(pTestData, pOutInfo->getTable(pTestData));
-                pTestPosteriorsOut->outputCustom(pTestData);
-            }
+//            if (pTrainPosteriorsOut) {
+//                pTrainPosteriorsOut->setTable(pTrainingData, pOutInfo->getTable(pTrainingData));
+//                pTrainPosteriorsOut->outputCustom(pTrainingData);
+//            }
+//
+//            if (pTestPosteriorsOut) {
+//                pTestPosteriorsOut->setTable(pTestData, pOutInfo->getTable(pTestData));
+//                pTestPosteriorsOut->outputCustom(pTestData);
+//            }
             
             
             int leftNegatives = filterDataset(pTrainingData, posteriors, r, trainingIndices);

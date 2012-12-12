@@ -117,20 +117,47 @@ namespace MultiBoost {
         
     // XXX fradav "old" optimized filter function cleaned of its O(log n) set::find()
     // using the new _rawIndices vector and untouched typo ;-)
-    pair<vpIterator,vpIterator> SortedData::getFileteredBeginEnd(int colIdx) {
-        _filteredColumn.clear();
-        for( column::iterator it = _sortedData[colIdx].begin(); it != _sortedData[colIdx].end(); it ++ ) {
-            if ( this->isUsedIndice( it->first ) && ( it->second == it->second ) ) {
-                int i = this->getOrderBasedOnRawIndex( it->first );
-                _filteredColumn.push_back( pair<int, FeatureReal>(i, it->second) );
+    pair<vpIterator,vpIterator> SortedData::getFilteredBeginEnd(int colIdx) {
+        if ( _pData->getDataRep() == DR_DENSE ) {
+            _filteredColumn.clear();
+            for( column::iterator it = _sortedData[colIdx].begin(); it != _sortedData[colIdx].end(); it ++ ) {
+                if ( this->isUsedIndice( it->first ) && ( it->second == it->second ) ) {
+                    int i = this->getOrderBasedOnRawIndex( it->first );
+                    _filteredColumn.push_back( pair<int, FeatureReal>(i, it->second) );
+                }
             }
+        } else if ( _pData->getDataRep() == DR_SPARSE )
+        {
+            //this solution is temporary, because this implementation convert dense data from the sparse one
+            _filteredColumn.clear();
+            set< int > tmpUsedIndices;
+            this->getIndexSet(tmpUsedIndices);
+            _filteredColumn.resize( tmpUsedIndices.size() );
+            int i;
+            column::reverse_iterator it;
+            for( i = _filteredColumn.size()-1, it = _sortedData[colIdx].rbegin(); it != _sortedData[colIdx].rend(); it++, i-- ) {
+                set<int>::iterator setIt = tmpUsedIndices.find( (*it).first ); 
+                if ( setIt != tmpUsedIndices.end() ) {
+                    tmpUsedIndices.erase( *setIt );
+                    int order = this->getOrderBasedOnRawIndex( it->first );
+                    _filteredColumn[ i ] =  pair<int, FeatureReal>(order, it->second);
+                }
+
+            }
+
+            //put the zero elements into the column
+            for( set<int>::iterator setIt = tmpUsedIndices.begin(); setIt != tmpUsedIndices.end(); setIt++, i-- ){
+                int order = this->getOrderBasedOnRawIndex( *setIt );
+                _filteredColumn[ i ] =  pair<int, FeatureReal>(order, 0);
+            }
+
         }
         return make_pair(_filteredColumn.begin(),_filteredColumn.end());
     }
         
     // ------------------------------------------------------------------------
         
-    pair<vpReverseIterator,vpReverseIterator> SortedData::getFileteredReverseBeginEnd(int colIdx) {
+    pair<vpReverseIterator,vpReverseIterator> SortedData::getFilteredReverseBeginEnd(int colIdx) {
         _filteredColumn.clear();
         for( column::iterator it = _sortedData[colIdx].begin(); it != _sortedData[colIdx].end(); it ++ ) {
             if ( this->isUsedIndice( it->first ) && ( it->second == it->second ) ) {
@@ -143,7 +170,7 @@ namespace MultiBoost {
         
         
     /*
-      pair<vpIterator,vpIterator> SortedData::getFileteredBeginEnd(int colIdx) {
+      pair<vpIterator,vpIterator> SortedData::getFilteredBeginEnd(int colIdx) {
       if ( _pData->getDataRep() == DR_DENSE ) {
       _filteredColumn.clear();
       for( column::iterator it = _sortedData[colIdx].begin(); it != _sortedData[colIdx].end(); it ++ ) {

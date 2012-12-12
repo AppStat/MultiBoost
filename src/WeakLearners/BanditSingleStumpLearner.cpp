@@ -57,7 +57,7 @@
 namespace MultiBoost {
 
     //REGISTER_LEARNER_NAME(SingleStump, BanditSingleStumpLearner)
-    REGISTER_LEARNER(BanditSingleStumpLearner)
+
 
     //vector< int > BanditSingleStumpLearner::_T; // the number of a feature has been selected 
     //int BanditSingleStumpLearner::_numOfCalling = 0; //number of the single stump learner had been called
@@ -298,7 +298,7 @@ namespace MultiBoost {
             //columnIndices[i] = p.second;                  
 
             const pair<vpIterator,vpIterator> dataBeginEnd = 
-                static_cast<SortedData*>(_pTrainingData)->getFileteredBeginEnd( _armsForPulling[i] );
+                static_cast<SortedData*>(_pTrainingData)->getFilteredBeginEnd( _armsForPulling[i] );
 
 
             const vpIterator dataBegin = dataBeginEnd.first;

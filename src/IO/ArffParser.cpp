@@ -38,18 +38,18 @@
 #include "Utils/Utils.h"
 
 namespace MultiBoost {
-        
+
     // ------------------------------------------------------------------------
-        
+
     ArffParser::ArffParser(const string& fileName,const string& headerFileName)
-        : GenericParser(fileName, headerFileName), _hasName(false)
+        : GenericParser(fileName, headerFileName), _hasName(false), _hasAttributeClassForm(false)
     {
         _denseLocale  = locale(locale(), new nor_utils::white_spaces(", "));
         _sparseLocale = locale(locale(), new nor_utils::white_spaces(", "));
     }
-        
+
     // ------------------------------------------------------------------------
-        
+
     void ArffParser::readData( vector<Example>& examples, NameMap& classMap, 
                                vector<NameMap>& enumMaps, NameMap& attributeNameMap,
                                vector<RawData::eAttributeType>& attributeTypes )
@@ -61,10 +61,10 @@ namespace MultiBoost {
             cerr << "\nERROR: Cannot open file <" << _fileName << ">!!" << endl;
             exit(1);
         }               
-                
+
         _dataRep = DR_UNKNOWN;
         _labelRep = LR_UNKNOWN;
-                
+
         if (_headerFileName.empty())
             readHeader(inFile, classMap, enumMaps, attributeNameMap, attributeTypes);
         else {
@@ -78,12 +78,12 @@ namespace MultiBoost {
             readHeader(inHeaderFile, classMap, enumMaps, attributeNameMap, attributeTypes);
         }
         readData(inFile, examples, classMap, enumMaps, attributeTypes);
-                
+
     }
-        
+
     // ------------------------------------------------------------------------
     // ------------------------------------------------------------------------
-        
+
     void ArffParser::readHeader( ifstream& in, NameMap& classMap, 
                                  vector<NameMap>& enumMaps, NameMap& attributeNameMap,
                                  vector<RawData::eAttributeType>& attributeTypes )
@@ -91,9 +91,9 @@ namespace MultiBoost {
         bool isData = false;
         string tmpStr;
         string tmpAttrType;
-                
+
         locale labelsLocale = locale(locale(), new nor_utils::white_spaces("{,}"));
-                
+
         while ( !isData )
         {
             switch ( getNextTokenType(in) )
@@ -101,29 +101,29 @@ namespace MultiBoost {
             case TT_DATA:
                 isData = true;
                 break;
-                                        
+
             case TT_COMMENT:
                 getline(in, tmpStr); // ignore line
                 break;
-                                        
+
             case TT_RELATION:
                 in >> _headerFileName;
                 break;
-                                        
+
             case TT_ATTRIBUTE:
                 in >> tmpStr;
-                                        
+
                 if ( nor_utils::cmp_nocase(tmpStr, "class") )
                 {
                     // It's a class!!
                     char firstChar = 0;
                     while ( isspace(firstChar = in.get()) && !in.eof() );
                     in.putback(firstChar);
-                                                
+
                     getline(in, tmpStr);
                     stringstream ss(tmpStr);
                     ss.imbue(labelsLocale); 
-                                                
+
                     // read the classes
                     for (;;)
                     {
@@ -135,6 +135,11 @@ namespace MultiBoost {
                             classMap.addName(tmpStr);
                     }
                     in.putback( '\n' );
+                }
+                else if ( nor_utils::cmp_nocase(tmpStr.substr(0,5), "class") )
+                {                   
+                    classMap.addName(tmpStr.substr(5));
+                    _hasAttributeClassForm = true;
                 }
                 else
                 {
@@ -168,7 +173,7 @@ namespace MultiBoost {
                             attributeTypes.push_back(RawData::ATTRIBUTE_ENUM);
                             stringstream ss(tmpAttrType);
                             ss.imbue(labelsLocale);
-                                                                
+
                             for (;;)
                             {
                                 ss >> tmpAttrType;
@@ -189,7 +194,7 @@ namespace MultiBoost {
                     // the jth attribute's enumMap is always in enumMaps[j]
                     enumMaps.push_back(enumMap);
                 }
-                                        
+
                 /*
                   nextChar = in.get();
                   if ( nextChar == '@')
@@ -200,37 +205,36 @@ namespace MultiBoost {
                 // skip to the end of the line
                 while ( in.get() != '\n' && !in.eof() );
                 break;
-                                        
+
             case TT_UNKNOWN:
                 cerr << "ERROR: Unknown token in the input file!" << endl;
                 exit(1);
                 break;
-                                        
+
             case TT_EOF:
                 cerr << "ERROR: End of File before reading any data! Separate header/data is not supported yet!" << endl;
                 exit(1);
                 break;
-                                        
+
             }
         }
-                
+
         _numAttributes = attributeNameMap.getNumNames();
     }
-        
+
     // ------------------------------------------------------------------------
-        
+
     void ArffParser::readData( ifstream& in, vector<Example>& examples,
                                NameMap& classMap, vector<NameMap>& enumMaps,
                                const vector<RawData::eAttributeType>& attributeTypes )
     {
         char firstChar = 0;
         string tmpLine;
-                
         istringstream ssDense;
         ssDense.imbue(_denseLocale);
         istringstream ssSparse;
         ssSparse.imbue(_sparseLocale);
-                
+
         cout << "Counting rows.." << flush;
         size_t numRows = nor_utils::count_rows(in);
         cout << "Allocating.." << flush;
@@ -242,18 +246,18 @@ namespace MultiBoost {
             exit(1);
         }
         cout << "Done!" << endl;
-                
+
         cout << "Now reading file.." << flush;
         size_t i;
         for (i = 0; i < numRows; ++i)
         {
             while ( isspace(firstChar = in.get()) && !in.eof() );
-                        
+
             if (in.eof())
                 break;
-                        
+
             Example& currExample = examples[i];
-                        
+
             //////////////////////////////////////////////////////////////////////////
             // first read the data
             if ( firstChar == '%' ) // comment!
@@ -261,7 +265,7 @@ namespace MultiBoost {
                 getline(in, tmpLine);
                 continue;
             }
-                        
+
             // read the name if specified
             if ( _hasName )
             {
@@ -275,7 +279,7 @@ namespace MultiBoost {
                         break;
                 }
             }
-                        
+
             if ( firstChar == '{' ) // sparse data!
             {
                 if ( _dataRep == DR_DENSE )
@@ -285,36 +289,47 @@ namespace MultiBoost {
                 }
                 else if ( _dataRep == DR_UNKNOWN )
                     _dataRep = DR_SPARSE;
-                                
+
+                if (_dataRep == DR_SPARSE && _hasAttributeClassForm)
+                    _labelRep = LR_SPARSE;
+
                 getline(in, tmpLine, '}');
                 ssSparse.clear();
                 ssSparse.str(tmpLine);
-                                
+
                 readSparseValues(ssSparse, currExample.getValues(), currExample.getValuesIndexes(), currExample.getValuesIndexesMap(),
                                  enumMaps, attributeTypes );
-                                
-                                
+
+
                 //string remaining(ssSparse.str().substr(ssSparse.tellg()));
-                                
+
                 ios::pos_type currPos = ssSparse.tellg();                               
                 string nextToken;
                 ssSparse >> nextToken;                                                                                          
-                                
+
                 if ( nextToken.empty() || (nextToken[0] != '{') ) // dense 
                 {
-                    if ( _labelRep == LR_SPARSE )
+                    if ( _labelRep == LR_SPARSE && !_hasAttributeClassForm)
                     {
                         cerr << "ERROR: Labels were declared sparse, but they are not formatted correctly (with {}!)!" << endl;
                         exit(1);
                     }
-                                        
-                    _labelRep = LR_DENSE;
-                                        
-                    // if empty, set to default value                                       
-                    if (nextToken.empty()) nextToken = classMap.getNameFromIdx(0);                                  
-                    ssSparse.clear();
-                    ssSparse.str(nextToken);
-                    readSimpleLabels(ssSparse, currExample.getLabels(), classMap);
+
+                    if (_hasAttributeClassForm)
+                    {
+                        ssSparse.clear();
+                        ssSparse.seekg(currPos);
+                        readSparseMultiLabels(ssSparse, currExample.getLabels(), classMap);
+                    }
+                    else
+                    {
+                        _labelRep = LR_DENSE;
+                        // if empty, set to default value                                       
+                        if (nextToken.empty()) nextToken = classMap.getNameFromIdx(0);                                  
+                        ssSparse.clear();
+                        ssSparse.str(nextToken);
+                        readSimpleLabels(ssSparse, currExample.getLabels(), classMap);
+                    }
                 } else if (nextToken[0] == '{'){ //sparse label
                     if ( _labelRep == LR_DENSE )
                     {
@@ -322,10 +337,10 @@ namespace MultiBoost {
                         exit(1);
                     }
                     _labelRep = LR_SPARSE;
-                                        
+
                     ssSparse.clear();
                     ssSparse.seekg(currPos);
-                                                                                                                        
+
                     while ( !in.eof() )
                     {
                         // skip spaces and the last bracket
@@ -333,9 +348,9 @@ namespace MultiBoost {
                         if ( firstChar == '{' )
                             break;
                     }                                                                               
-                                        
+
                     readExtendedLabels(ssSparse, currExample.getLabels(), classMap);
-                                        
+
                     while ( !in.eof() )
                     {
                         // skip spaces and the last bracket
@@ -348,8 +363,8 @@ namespace MultiBoost {
                     cout << "Unknown label representation! (ArffPArser)" << endl;
                     exit(-1);
                 }
-                                
-                                
+
+
             }
             else // dense!
             {
@@ -360,11 +375,13 @@ namespace MultiBoost {
                 }
                 else if ( _dataRep == DR_UNKNOWN )
                     _dataRep = DR_DENSE;
-                                
+
+                if (_dataRep == DR_DENSE && _hasAttributeClassForm)
+                    _labelRep = LR_DENSE;
                 in.putback(firstChar);
                 readDenseValues(in, currExample.getValues(), enumMaps, attributeTypes);
-                                
-                                
+
+
                 //////////////////////////////////////////////////////////////////////////
                 while ( !in.eof() )
                 {
@@ -373,7 +390,6 @@ namespace MultiBoost {
                     if ( !isspace(firstChar) && firstChar != ',' )
                         break;
                 }
-                                
                 // now read the labels
                 if ( firstChar == '{' ) // weight is specified!
                 {
@@ -383,11 +399,11 @@ namespace MultiBoost {
                         exit(1);
                     }
                     _labelRep = LR_SPARSE;
-                                        
+
                     getline(in, tmpLine);
                     ssSparse.clear();
                     ssSparse.str(tmpLine);
-                                        
+
                     readExtendedLabels(ssSparse, currExample.getLabels(), classMap);
                 }
                 else // dense!
@@ -397,49 +413,56 @@ namespace MultiBoost {
                         cerr << "ERROR: Labels were declared sparse, but they are not formatted correctly (with {}!)!" << endl;
                         exit(1);
                     }
-                                        
+
                     _labelRep = LR_DENSE;
-                                        
+
                     in.putback(firstChar);
-                                        
+
                     getline(in, tmpLine);
                     ssDense.clear();
                     ssDense.str(tmpLine);
-                                        
-                    readSimpleLabels(ssDense, currExample.getLabels(), classMap);
+
+                    if (_hasAttributeClassForm)
+                    {
+                        readDenseMultiLabels(ssDense, currExample.getLabels(), classMap);
+                    }
+                    else
+                    {
+                        readSimpleLabels(ssDense, currExample.getLabels(), classMap);
+                    }
                 }
             }
         }
-                
+
         cout << "Done!" << endl;
-                
+
         if ( i != numRows )
         {
             // last row was empty!
             examples.resize(i);
         }
-                
+
         // sparse representation always set the weight!
         if ( _labelRep == LR_SPARSE )
             _hasWeigthInit = true;
     }
-        
+
     // ------------------------------------------------------------------------
-        
+
     void ArffParser::readSimpleLabels( istringstream& ss, vector<Label>& labels,
                                        NameMap& classMap )
     {
-                
+
         string strLabel;
         const int numClasses = classMap.getNumNames();
         labels.resize(numClasses);
-                
+
         for ( int i = 0; i < numClasses; ++i )
         {
             labels[i].idx = i;
             labels[i].y = -1;
         }
-                
+
         // now get the declared labels
         while (!ss.eof())
         {
@@ -447,48 +470,107 @@ namespace MultiBoost {
             strLabel = nor_utils::trim(strLabel);
             labels[ classMap.getIdxFromName(strLabel) ].y = +1;
         }
-                
+
     }
-        
+
     // ------------------------------------------------------------------------
-        
+
+    void ArffParser::readDenseMultiLabels( istringstream& ss, vector<Label>& labels,
+                                           NameMap& classMap )
+    {
+
+        const locale& originalLocale = ss.imbue(_denseLocale); 
+        string strLabel;
+        const int numClasses = classMap.getNumNames();
+        labels.resize(numClasses);
+        AlphaReal weight;
+
+        for ( int j = 0; j < numClasses; ++j )
+        {
+            ss >> weight;
+
+            labels[j].idx = j;
+            labels[j].y = nor_utils::sign(weight);
+            labels[j].weight = abs(weight);
+        }
+
+        ss.imbue(originalLocale);                
+    }
+
+    // ------------------------------------------------------------------------
+
+    void ArffParser::readSparseMultiLabels( istringstream& ss, vector<Label>& labels,
+                                            NameMap& classMap )
+    {
+        string tmpVal;
+        AlphaReal weight;
+        bool first = true;
+        while (!ss.eof())
+        {
+            Label tmpLabel;
+            if (first)
+            {
+                tmpLabel.idx = _lastIdx - _numAttributes;
+                first = false;
+            }
+            else
+            {
+                ss >> tmpVal;
+
+                if ( tmpVal == "}" || ss.eof() )
+                    break;
+
+                tmpLabel.idx = atoi(tmpVal.c_str()) - _numAttributes;
+            }
+
+            ss >> weight;
+            tmpLabel.y = nor_utils::sign(weight);
+            tmpLabel.weight = abs(weight);
+
+            labels.push_back(tmpLabel);
+        }
+
+    }
+
+    // ------------------------------------------------------------------------
+
     void ArffParser::readExtendedLabels( istringstream& ss, vector<Label>& labels,
                                          NameMap& classMap )
     {
         string strLabel;
         AlphaReal weight;
-                
+
         // now get the declared labels
         while (!ss.eof())
         {
             Label tmpLabel;
             ss >> strLabel;
-                        
+
             if ( strLabel == "}" || ss.eof() )
                 break;
-                        
+
             ss >> weight;
-                        
+
             tmpLabel.y = nor_utils::sign(weight);
             tmpLabel.weight = abs(weight); // this will be used later in RawData to set the weights
-                        
+
             strLabel = nor_utils::trim(strLabel);
             tmpLabel.idx = classMap.getIdxFromName(strLabel);
             labels.push_back(tmpLabel);
         }
     }
-        
+
     // ------------------------------------------------------------------------
-        
+
     void ArffParser::readDenseValues(ifstream& in, vector<FeatureReal>& values,
                                      vector<NameMap>& enumMaps, 
                                      const vector<RawData::eAttributeType>& attributeTypes )
     {
         const locale& originalLocale = in.imbue(_denseLocale); 
-                
+
         values.reserve(_numAttributes);
         string tmpVal;
-                
+
         for ( int j = 0; j < _numAttributes; ++j )
         {
             in >> tmpVal;
@@ -502,12 +584,12 @@ namespace MultiBoost {
             else //if ( attributeTypes[i] == RawData::ATTRIBUTE_ENUM ) 
                 values.push_back( enumMaps[j].getIdxFromName(tmpVal) );
         }
-                
+
         in.imbue(originalLocale);
     }
-        
+
     // -----------------------------------------------------------------------------
-        
+
     void ArffParser::readSparseValues(istringstream& ss, vector<FeatureReal>& values, 
                                       vector<int>& idxs, map<int, int>& idxmap, vector<NameMap>& enumMaps, 
                                       const vector<RawData::eAttributeType>& attributeTypes)
@@ -519,9 +601,9 @@ namespace MultiBoost {
         while (!ss.eof())
         {
             ss >> tmpIdx;
-                        
-            if (tmpIdx == labelFeatureIndex ) break;
-                        
+
+            if (tmpIdx >= labelFeatureIndex ) { _lastIdx = tmpIdx; break; }
+
             idxs.push_back(tmpIdx);
             idxmap[ tmpIdx ] = i++;
             ss >> tmpVal;
@@ -537,38 +619,38 @@ namespace MultiBoost {
             }
         }
     }
-        
+
     // -----------------------------------------------------------------------------
-        
+
     ArffParser::eTokenType ArffParser::getNextTokenType( ifstream& in )
     {
         char firstChar = 0;
-                
+
         // skip white space at the beginning
         while ( isspace(firstChar = in.get()) && !in.eof() );
-                
+
         if ( in.eof() )
             return TT_EOF;
-                
+
         if ( firstChar == '%' )
             return TT_COMMENT;
-                
+
         if ( firstChar != '@' )
             return TT_UNKNOWN;
-                
+
         string str;
         in >> str;
-                
+
         if ( nor_utils::cmp_nocase(str, "attribute") )
             return TT_ATTRIBUTE;
         else if ( nor_utils::cmp_nocase(str, "relation") )
             return TT_RELATION;
         else if ( nor_utils::cmp_nocase(str, "data") )
             return TT_DATA;
-                
+
         return TT_UNKNOWN;
     }
-        
+
     // ------------------------------------------------------------------------
-        
+
 } // end of namespace MultiBoost

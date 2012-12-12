@@ -99,7 +99,7 @@ namespace MultiBoost {
             pConstantWeakHypothesis->setTrainingData(pTrainingData);
             AlphaReal constantEnergy = pConstantWeakHypothesis->run();
 
-            pOutInfo = new OutputInfo(_outputInfoFile);
+            pOutInfo = new OutputInfo(args);
             pOutInfo->initialize(pTrainingData);
 
             updateMargins( pTrainingData, pConstantWeakHypothesis );

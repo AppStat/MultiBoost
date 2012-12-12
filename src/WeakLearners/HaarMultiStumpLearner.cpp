@@ -44,7 +44,7 @@
 
 namespace MultiBoost {
         
-    REGISTER_LEARNER_NAME(HaarMultiStump, HaarMultiStumpLearner)
+
         
     // ------------------------------------------------------------------------------
         

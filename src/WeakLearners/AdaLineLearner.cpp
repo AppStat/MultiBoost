@@ -42,7 +42,7 @@ using namespace std;
 namespace MultiBoost {
         
         
-    REGISTER_LEARNER(AdaLineLearner)                
+
     // ------------------------------------------------------------------------------               
     AlphaReal AdaLineLearner::run()
     {

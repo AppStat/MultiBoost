@@ -44,7 +44,7 @@
 namespace MultiBoost {
         
     //REGISTER_LEARNER_NAME(SingleStump, SingleSparseStumpLearner)
-    REGISTER_LEARNER(SingleSparseStumpLearner)
+
         
     // ------------------------------------------------------------------------------
         
@@ -89,7 +89,7 @@ namespace MultiBoost {
                 //if ( static_cast<SortedData*>(_pTrainingData)->isAttributeEmpty( j ) ) continue;
                                 
                 const pair<vpReverseIterator,vpReverseIterator> dataBeginEnd = 
-                    static_cast<SortedData*>(_pTrainingData)->getFileteredReverseBeginEnd(j);
+                    static_cast<SortedData*>(_pTrainingData)->getFilteredReverseBeginEnd(j);
                                 
                 //if ( static_cast<SortedData*>(_pTrainingData)->isFilteredAttributeEmpty() ) continue;
                 //if ( static_cast<SortedData*>(_pTrainingData)->isFilteredAttributeHasOneValue() ) continue;
@@ -174,7 +174,7 @@ namespace MultiBoost {
                 
                 
         const pair<vpReverseIterator,vpReverseIterator> dataBeginEnd = 
-            static_cast<SortedData*>(_pTrainingData)->getFileteredReverseBeginEnd( colIdx );
+            static_cast<SortedData*>(_pTrainingData)->getFilteredReverseBeginEnd( colIdx );
                 
                 
         const vpReverseIterator dataBegin = dataBeginEnd.first;

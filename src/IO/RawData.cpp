@@ -110,8 +110,12 @@ namespace MultiBoost {
                 
         vector<Example>::const_iterator it;
         map<int, int> tmpPointsPerClass;
-                
-        for ( it = _data.begin(); it != _data.end(); ++it )
+        _mostFrequentValuePerFeature.resize(_numAttributes);
+        vector<map<FeatureReal, int> > tmpFeatureCounters(_numAttributes);
+        vector<int> tmpFeatureMaxCounters(_numAttributes, 0);
+        
+        int i,j;
+        for (i = 0, it = _data.begin(); it != _data.end(); ++it, ++i )
         {
             const vector<Label>& labels = it->getLabels();
             vector<Label>::const_iterator lIt;
@@ -130,7 +134,27 @@ namespace MultiBoost {
                     break;
                 }
             }
-                        
+        
+            for(j = 0; j < _numAttributes; ++j)
+            {
+                FeatureReal tmpF = getValue(i, j);
+                map<FeatureReal, int>& fmap = tmpFeatureCounters[j];
+                map<FeatureReal,int>::iterator fit = fmap.find(tmpF);
+                int tmpCount;
+                if (fit == fmap.end())
+                {
+                    fmap.insert(pair<FeatureReal,int>(tmpF,1));
+                    tmpCount = 1;
+                } else {
+                    tmpCount = ++(fit->second);
+                }
+                if (tmpCount > tmpFeatureMaxCounters[j])
+                {
+                    tmpFeatureMaxCounters[j] = tmpCount;
+                    _mostFrequentValuePerFeature[j] = tmpF;
+                }
+
+            }
         }
                 
                 

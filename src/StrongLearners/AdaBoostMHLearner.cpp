@@ -166,18 +166,8 @@ namespace MultiBoost {
 
         // The output information object
         OutputInfo* pOutInfo = NULL;
-
-
         if ( !_outputInfoFile.empty() ) 
         {
-            // Baseline: constant classifier - goes into 0th iteration
-
-            BaseLearner* pConstantWeakHypothesis = pConstantWeakHypothesisSource->create() ;
-            pConstantWeakHypothesis->initLearningOptions(args);
-            pConstantWeakHypothesis->setTrainingData(pTrainingData);
-            AlphaReal constantEnergy = pConstantWeakHypothesis->run();
-
-            //pOutInfo = new OutputInfo(_outputInfoFile);
             pOutInfo = new OutputInfo(args);
             pOutInfo->initialize(pTrainingData);
 
@@ -185,23 +175,32 @@ namespace MultiBoost {
                 pOutInfo->initialize(pTestData);
             pOutInfo->outputHeader(pTrainingData->getClassMap());
 
-            pOutInfo->outputIteration(-1);
-            pOutInfo->outputCustom(pTrainingData, pConstantWeakHypothesis);
-            
-            if (pTestData != NULL)
+
+            if ( ! args.hasArgument("resume") )
             {
-                pOutInfo->separator();
-                pOutInfo->outputCustom(pTestData, pConstantWeakHypothesis);   
+                // Baseline: constant classifier - goes into 0th iteration
+
+                BaseLearner* pConstantWeakHypothesis = pConstantWeakHypothesisSource->create() ;
+                pConstantWeakHypothesis->initLearningOptions(args);
+                pConstantWeakHypothesis->setTrainingData(pTrainingData);
+                pConstantWeakHypothesis->run();
+
+                pOutInfo->outputIteration(-1);
+                pOutInfo->outputCustom(pTrainingData, pConstantWeakHypothesis);
+                if (pTestData != NULL)
+                {
+                    pOutInfo->separator();
+                    pOutInfo->outputCustom(pTestData, pConstantWeakHypothesis);
+                }
+                pOutInfo->outputCurrentTime();
+                pOutInfo->endLine();
+                
+                pOutInfo->initialize(pTrainingData);
+                if (pTestData)
+                    pOutInfo->initialize(pTestData);
             }
-
-            pOutInfo->outputCurrentTime();
-
-            pOutInfo->endLine(); 
-            pOutInfo->initialize(pTrainingData);
-
-            if (pTestData)
-                pOutInfo->initialize(pTestData);
         }
+        
         //cout << "Before serialization" << endl;
         // reload the previously found weak learners if -resume is set. 
         // otherwise just return 0
@@ -358,15 +357,15 @@ namespace MultiBoost {
         AdaBoostMHClassifier classifier(args, _verbose);
 
         // -cmatrix <dataFile> <shypFile>
-        if ( args.hasArgument("cmatrix") )
+        if ( args.getNumValues("cmatrix") == 2 )
         {
             string testFileName = args.getValue<string>("cmatrix", 0);
             string shypFileName = args.getValue<string>("cmatrix", 1);
 
             classifier.printConfusionMatrix(testFileName, shypFileName);
         }
-        // -cmatrixfile <dataFile> <shypFile> <outFile>
-        else if ( args.hasArgument("cmatrixfile") )
+        // -cmatrix <dataFile> <shypFile> <outFile>
+        else if ( args.getNumValues("cmatrix") == 3)
         {
             string testFileName = args.getValue<string>("cmatrix", 0);
             string shypFileName = args.getValue<string>("cmatrix", 1);
@@ -401,72 +400,97 @@ namespace MultiBoost {
 
     // -------------------------------------------------------------------------
     // -------------------------------------------------------------------------
-    AlphaReal AdaBoostMHLearner::updateWeights(OutputInfo* pOutInfo, InputData* pData, vector<BaseLearner*>& pWeakHypothesis){
+    AlphaReal AdaBoostMHLearner::updateWeights(OutputInfo* pOutInfo, InputData* pData, vector<BaseLearner*>& pWeakHypothesiss){
         const int numExamples = pData->getNumExamples();
         const int numClasses = pData->getNumClasses();
-
-        AlphaReal Z = 0; // The normalization factor
 
         // _hy will contain the margins
         _hy.resize(numExamples);
         for ( int i = 0; i < numExamples; ++i){
             _hy[i].resize(numClasses);
             fill( _hy[i].begin(), _hy[i].end(), 0.0 );
+
+            vector<Label>& labels = pData->getLabels(i);
+            // initializing to log weights
+            for (vector<Label>::iterator lIt = labels.begin(); lIt != labels.end(); ++lIt )
+            {
+                lIt->weight = log(lIt->weight);
+            }
         }
 
                 
-        vector<BaseLearner*>::iterator it;
         if (_verbose > 0)
             cout << ": 0%." << flush;
 
         const int numIters = static_cast<int>(_foundHypotheses.size());
         const int step = numIters < 5 ? 1 : numIters / 5;
 
-        int t = 0;
-        // calculate the margins ( f^{t}(x_i) ), _hy will contain
-        for( it = pWeakHypothesis.begin(); it != pWeakHypothesis.end(); it++, t++ )
+        vector<BaseLearner*>::iterator it;
+        int t;
+        for(t = 0, it = pWeakHypothesiss.begin(); it != pWeakHypothesiss.end(); it++, t++)
         {
-
-            if (_verbose > 1 && (t + 1) % step == 0)
+            if (_verbose > 1)
             {
-                float progress = static_cast<float>(t) / static_cast<float>(numIters) * 100.0;                             
-                cout << "." << setprecision(2) << progress << "%." << flush;
+                if ((t + 1) % 1000 == 0)
+                    cout << "." << flush;
+                if ((t + 1) % step == 0)
+                {
+                    float progress = static_cast<float>(t) / static_cast<float>(numIters) * 100.0;                             
+                    cout << "." << setprecision(2) << progress << "%." << flush;
+                }
             }
 
             BaseLearner* pWeakHypothesis = *it;
-
             const AlphaReal alpha = pWeakHypothesis->getAlpha();
             AlphaReal hx;
             for (int i = 0; i < numExamples; ++i)
             {
                 vector<Label>& labels = pData->getLabels(i);
-                vector<Label>::iterator lIt;
-                for (lIt = labels.begin(); lIt != labels.end(); ++lIt )
+                // accumulating margins and log weights
+                for (vector<Label>::iterator lIt = labels.begin(); lIt != labels.end(); ++lIt )
                 {
-                    hx = pWeakHypothesis->classify(pData, i, lIt->idx );
+                    hx = pWeakHypothesis->classify(pData, i, lIt->idx ); // h_l(x_i)
                     _hy[i][lIt->idx] += alpha * hx; // alpha * h_l(x_i)                             
-
-                    lIt->weight *= exp( -alpha * hx * lIt->y );
-
-                    Z += lIt->weight;
-                                        
-                                        
+                    lIt->weight -= alpha * hx * lIt->y; // log(exp( -alpha * h_l(x_i) ))
                 }
             }
-            // renormalize the weights
-            for (int i = 0; i < numExamples; ++i)
+        }
+        
+
+        // centering the log weights for avoiding numerical problems
+        AlphaReal meanLogWeights = 0; // the mean of the log weights
+        int numLabels = 0; // the number of the labels (should be counted since the label vector is of variable size)
+        for (int i = 0; i < numExamples; ++i)
+        {
+            vector<Label>& labels = pData->getLabels(i);
+            for (vector<Label>::iterator lIt = labels.begin(); lIt != labels.end(); ++lIt )
             {
-                vector<Label>& labels = pData->getLabels(i);
-                vector<Label>::iterator lIt;
-
-                for (lIt = labels.begin(); lIt != labels.end(); ++lIt )
-                {
-                    lIt->weight /= Z;
-                }
+                meanLogWeights += lIt->weight;
+                numLabels++;
             }
+        }
+        meanLogWeights /= numLabels;
 
-            //i++;
-            //if ( i % 1000 == 0 ) cout << i <<endl;
+        // computing the normalization factor 
+        AlphaReal Z = 0; // the normalization factor
+        for (int i = 0; i < numExamples; ++i)
+        {
+            vector<Label>& labels = pData->getLabels(i);
+            for (vector<Label>::iterator lIt = labels.begin(); lIt != labels.end(); ++lIt )
+            {
+                lIt->weight -= meanLogWeights;
+                Z += exp(lIt->weight);
+            }
+        }
+        
+        // normalizing and exponentiating the weights
+        for (int i = 0; i < numExamples; ++i)
+        {
+            vector<Label>& labels = pData->getLabels(i);
+            for (vector<Label>::iterator lIt = labels.begin(); lIt != labels.end(); ++lIt )
+            {
+                lIt->weight = exp(lIt->weight)/Z;
+            }
         }
                 
         //upload the margins 
@@ -628,7 +652,7 @@ namespace MultiBoost {
                 cout << "Recalculating the weights of training data...";
                         
             updateWeights(pOutInfo, pTrainingData, _foundHypotheses);
-                        
+
             if (_verbose > 0)
                 cout << "Done" << endl;
             if (pTestData)
@@ -692,29 +716,15 @@ namespace MultiBoost {
 
         pOutInfo->outputIteration(t);
         pOutInfo->outputCustom(pTrainingData, pWeakHypothesis);
-//              pOutInfo->outputError(pTrainingData, pWeakHypothesis);
+
         if (pTestData)
         {
-//                      pOutInfo->outputError(pTestData, pWeakHypothesis);
+
             pOutInfo->separator();
             pOutInfo->outputCustom(pTestData, pWeakHypothesis);
             
         }
         
-//              pOutInfo->outputWeightedError(pTrainingData);
-//              if (pTestData)
-//                      pOutInfo->outputWeightedError(pTestData);
-                
-                
-        /*
-          pOutInfo->outputMargins(pTrainingData, pWeakHypothesis);
-          pOutInfo->outputEdge(pTrainingData, pWeakHypothesis);
-          if (pTestData)
-          pOutInfo->outputMargins(pTestData, pWeakHypothesis);
-          pOutInfo->outputMAE(pTrainingData);      
-          if (pTestData)
-          pOutInfo->outputMAE(pTestData);  
-        */
         pOutInfo->outputCurrentTime();
         pOutInfo->endLine();
     }
@@ -776,7 +786,7 @@ namespace MultiBoost {
                 
                                                         
         if (_verbose == 1)
-            cout << "Learning in progress..." << endl;
+            cout << "Learning in progress... " << flush;
                 
                 
         ///////////////////////////////////////////////////////////////////////
@@ -785,7 +795,7 @@ namespace MultiBoost {
         for (int t = 0; t < numIterations; ++t)
         {
             if (_verbose > 0)
-                cout << "--------------[ Boosting iteration " << (t+1) << " ]--------------" << endl;                           
+                cout << (t+1) << ", " << flush;
                         
             BaseLearner* pWeakHypothesis = pWeakHypothesisSource->create();
             pWeakHypothesis->initLearningOptions(args);
