@@ -57,10 +57,9 @@ namespace MultiBoost {
                              "  Don't forget to add its parameters\n",
                              2, "<baseLearnerType> <numBaseLearners>");
         
-        args.declareArgument("loop", 
-                             "If set, we continue looping over base classifiers until the edge" 
-                             "stops increasing, otherwise we stop after at most <numBaseLearners>"
-                             "iterations\n",
+        args.declareArgument("noloop", 
+                             "If set, we stop looping over base classifiers after adding the first" 
+                             "(at most) <numBaseLearners> base learners\n",
                              0, "");
         
         
@@ -77,11 +76,11 @@ namespace MultiBoost {
         args.getValue("baselearnertype", 0, baseLearnerName);   
         args.getValue("baselearnertype", 1, _numBaseLearners);   
 
-        // --loop: continue looping over base classifiers until the edge decreases
-        if ( args.hasArgument("loop") )
-            _stopAfterFirstRound = false;
-        else
+        // --noloop: stop looping over base classifiers after (at most) m base classifiers
+        if ( args.hasArgument("noloop") )
             _stopAfterFirstRound = true;
+        else
+            _stopAfterFirstRound = false;
 
         // get the registered weak learner (type from name)
         BaseLearner* pWeakHypothesisSource = 

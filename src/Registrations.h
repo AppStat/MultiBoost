@@ -30,6 +30,8 @@
  *
  */
 
+#pragma once
+
 #include "WeakLearners/AdaLineLearner.h"
 #include "WeakLearners/BanditSingleSparseStump.h"
 #include "WeakLearners/BanditSingleStumpLearner.h"

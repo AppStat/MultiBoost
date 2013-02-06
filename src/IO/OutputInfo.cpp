@@ -44,7 +44,7 @@
 namespace MultiBoost {
 
     // -------------------------------------------------------------------------
-        
+
     OutputInfo::OutputInfo(const nor_utils::Args& args, bool customUpdate, const string & clArg)
     {
         _customTablesUpdate = customUpdate;
@@ -68,71 +68,97 @@ namespace MultiBoost {
         ios_base::openmode outputfileflag = ios_base::out;
         if (args.hasArgument("resume") &&
             !args.hasArgument("slowresumeprocess")) {
-            outputfileflag = ios_base::in | ios_base::out | ios_base::app;
+            outputfileflag = ios_base::in | ios_base::out | ios_base::ate;
         }
         _outStream.open(outputInfoFile.c_str(), outputfileflag);
-                
+        
         // is it really open?
         if ( !_outStream.is_open() )
         {
-            cerr << "ERROR: cannot open the output steam (<" 
-                 << outputInfoFile << ">) for the step-by-step info!" << endl;
-            exit(1);
+            outputfileflag = ios_base::out;
+            _outStream.open(outputInfoFile.c_str(), outputfileflag);
+            if ( !_outStream.is_open() ) {
+                cerr << "ERROR: cannot open the output steam (<"
+                     << outputInfoFile << ">) for the step-by-step info!" << endl;
+                exit(1);
+            }
         }
         
         // the header file
         string headerFileName = outputInfoFile + ".header";
         ios_base::openmode headerflag = ios_base::out;
-        if (args.hasArgument("resume")) {
+        if (outputfileflag != ios_base::out) {
             headerflag = ios_base::in;
         }
         
         _headerOutStream.open(headerFileName.c_str(), headerflag);
         if ( !_headerOutStream.is_open() )
         {
-            cerr << "ERROR: cannot open the header output steam (<"
-                 << headerFileName << ">) for the step-by-step info!" << endl;
-            exit(1);
+            cerr << "WARNING: cannot find the header output steam (<"
+            << headerFileName << ">). A new header file will be created." << endl;
+            
+            // try to create the file if it doesn't exist
+            headerflag = ios_base::out;
+            _headerOutStream.open(headerFileName.c_str(), headerflag);
+            if ( !_headerOutStream.is_open()) {
+                cerr << "ERROR: cannot open the header output steam (<"
+                     << headerFileName << ">) for the step-by-step info!" << endl;
+                exit(1);
+            }
         }
         
         _timeBias = 0;
         
-        if (args.hasArgument("resume") &&
-            !args.hasArgument("slowresumeprocess")) {
+        if (headerflag == ios_base::in) {
             
-            // let's look for the position of the time
+            // look for the position of the time
             // column (if it exists) in the header
             int position = -1, i = 0;
+                        
             while (! _headerOutStream.eof()) {
                 string column;
                 _headerOutStream >> column;
-                if (column.compare("t") == 0) {
+                if (column.compare("time") == 0) {
                     position = i;
                     break;
                 }
                 ++i;
             }
-
+            
             // if the time actually belongs to the header
-            if (position >= 0 && _outStream.peek() != std::ifstream::traits_type::eof()) {
+            if (position >= 0) {
                 // if "t" belongs to the header and the outputfile is not empty
-                char buff[1];
-                int security = 100; //cause "while loops never trust young padawan"
-                while (buff[0] != ' ' && buff[0] != '\t') {
-                    _outStream.unget().unget();
-                    _outStream.read(buff, 1);
-                    --security;
-                    if (security == 0) {
-                        break;
+                
+                string readLine;
+                _outStream.seekg(0, ios_base::beg);
+                
+                while (! _outStream.eof()) {
+                    string tmpLine;
+                    getline(_outStream, tmpLine);
+                    if (! tmpLine.empty()) {
+                        readLine = tmpLine;
                     }
+
                 }
                 
-                if (security != 0) {
-                    _outStream >> _timeBias;
+                if (! readLine.empty()) {
+                    istringstream tmpLineSs(readLine);
+                    string timeToken;
+                    while (! tmpLineSs.eof()) {
+                        string tmpToken("0");
+                        getline(tmpLineSs, tmpToken, '\t');
+                        if (! tmpToken.empty()) {
+                            timeToken = tmpToken;
+                        }
+                    }
+                    istringstream tmpOss(timeToken);
+                    tmpOss  >> _timeBias;
+
                 }
                 
                 _outStream.clear();
                 _outStream.seekp(0, ios_base::end);
+
             }
         }
     }
@@ -188,7 +214,7 @@ namespace MultiBoost {
         }
         
         if (outputTime) {
-            _headerOutStream << "Time" << OUTPUT_SEPARATOR;
+            _headerOutStream << "time" << OUTPUT_SEPARATOR;
         }
         
         if (endline) {
