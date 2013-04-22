@@ -133,6 +133,20 @@ namespace MultiBoost {
          */                                                             
                 
         virtual pair<vpReverseIterator,vpReverseIterator> getFilteredReverseBeginEnd(int colIdx);
+
+        /**
+         * Get a pair of pair of iterators
+         * The first pair is obtained through getFilteredBeginEnd()
+         * The second pair is the reverse pair.
+         * \param colIdx The column index
+         * \return A pair of pair containing the iterator to the first and last elements of the column and 
+         * the second pair is the reverse
+         * \remark only used by StumpAlgorithm
+         * \date 04/18/2013
+         */                                                             
+        virtual pair<pair<vpIterator,vpIterator>,
+            pair<vpReverseIterator,vpReverseIterator> > getFilteredandReverseBeginEnd(int colIdx);
+
     protected:
                 
         /**

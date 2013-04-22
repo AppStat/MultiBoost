@@ -12,7 +12,21 @@ set(BASEPATH "${CMAKE_SOURCE_DIR}/src")
 
 #This allows recursive parsing of the source files
 # Including sub-directories recursively
-file(GLOB_RECURSE project_SRCS "${BASEPATH}/*/*.cpp" "${BASEPATH}/*/*.c" "${BASEPATH}/*.h" )
+file(GLOB project_SRCS "${BASEPATH}/*.h")
+file(GLOB_RECURSE project_SRCS 
+  "${BASEPATH}/Algorithms/*.cpp" "${BASEPATH}/Algorithms/*.h"
+  "${BASEPATH}/Bandits/*.cpp" "${BASEPATH}/Bandits/*.h"
+  "${BASEPATH}/BanditsLS/*.cpp" "${BASEPATH}/BanditsLS/*.h"
+  "${BASEPATH}/Classifiers/*.cpp" "${BASEPATH}/Classifiers/*.h"
+  "${BASEPATH}/IO/*.cpp" "${BASEPATH}/IO/*.h"
+  "${BASEPATH}/Others/*.cpp" "${BASEPATH}/Others/*.h"
+  "${BASEPATH}/StrongLearners/*.cpp" "${BASEPATH}/StrongLearners/*.h"
+  "${BASEPATH}/Utils/*.cpp" "${BASEPATH}/Utils/*.h"
+  "${BASEPATH}/WeakLearners/*.cpp" "${BASEPATH}/WeakLearners/*.h")
+
+# Bzip2
+file(GLOB bzip2_SRCS "${BASEPATH}/Bzip2/*.cpp" "${BASEPATH}/Bzip2/*.c" "${BASEPATH}/Bzip2/*.h")
+add_library(Bzip2Lib STATIC ${bzip2_SRCS})
 
 # By Default AlphaReal is double and FeatureReal is float
 # uncomment those lines to change that
@@ -29,7 +43,7 @@ add_library(MultiBoostLib STATIC ${project_SRCS})
 add_executable(multiboost "${BASEPATH}/main.cpp")
 
 # adding library to the exec
-target_link_libraries(multiboost MultiBoostLib)
+target_link_libraries(multiboost MultiBoostLib Bzip2Lib)
 
 
 

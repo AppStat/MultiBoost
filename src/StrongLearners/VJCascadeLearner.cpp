@@ -282,7 +282,7 @@ namespace MultiBoost {
                     pConstantWeakHypothesis->setTrainingData(pTrainingData);
                     AlphaReal constantEnergy = pConstantWeakHypothesis->run();
                                         
-                    if ( (constantEnergy <= energy) || ( energy != energy ) ) {
+                    if ( (constantEnergy <= energy) || ( energy != energy ) || ( nor_utils::is_zero(constantEnergy - energy))) {
                         delete pWeakHypothesis;
                         pWeakHypothesis = pConstantWeakHypothesis;
                     }

@@ -97,7 +97,7 @@ namespace nor_utils {
  * When the user needs the values of an argument, it just calls the
  * getValue() or getValuesVector().
  *
- * It is also possible to defines groups of arguments, using setGroup
+ * It is also possible to define groups of arguments, using setGroup
  * before the call of any declareArgument. The name passed, will be used
  * to print a nicely formatted list of the group's arguments using 
  * printGroup().

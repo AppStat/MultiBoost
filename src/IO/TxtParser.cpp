@@ -82,10 +82,10 @@ namespace MultiBoost {
         string tmpExampleName;
         string tmpClassName;
                 
-        cout << "Counting rows.." << flush;
+        if (_verboseLevel > 0) cout << "Counting rows.." << flush;
         size_t numRows = nor_utils::count_rows(inFile);
                 
-        cout << "Allocating.." << flush;
+        if (_verboseLevel > 0) cout << "Allocating.." << flush;
         try {
             examples.resize(numRows);
         } 
@@ -94,9 +94,9 @@ namespace MultiBoost {
             exit(1);
         }
                 
-        cout << "Done!" << endl;
+        if (_verboseLevel > 0) cout << "Done!" << endl;
                 
-        cout << "Reading file.." << endl;
+        if (_verboseLevel > 0) cout << "Reading file.." << endl;
                 
         /////////////////////////
         size_t i;
@@ -144,7 +144,7 @@ namespace MultiBoost {
             examples.resize(i);
         }
                 
-        cout << "Done!" << endl;
+        if (_verboseLevel > 0) cout << "Done!" << endl;
     }
         
     // ------------------------------------------------------------------------

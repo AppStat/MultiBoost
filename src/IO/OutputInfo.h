@@ -65,17 +65,13 @@ namespace MultiBoost {
      * \date 16/11/2005
      */
     typedef vector< vector<AlphaReal> > table;
-    typedef vector<BaseOutputInfoType*>::iterator OutInfIt;
+    typedef map<string, BaseOutputInfoType*>::iterator OutInfIt;
     
-    /**
-     * A kind of templatized typedef 
-     * \date 05/07/2011
-     */  
-    template<typename T>
-        struct SpecificInfo
-        {
-            typedef map<string, vector<T> > Type;
-        };
+//    template<typename T>
+//        struct SpecificInfo
+//        {
+//            typedef map<string, vector<T> > Type;
+//        };
     
         
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -113,7 +109,7 @@ namespace MultiBoost {
          * replace them.
          * \date 04/07/2011
          */
-        void setOutputList(const string& list, bool append = false, const nor_utils::Args* args = NULL);
+        void setOutputList(const string& list, const nor_utils::Args* args = NULL);
         
         /**
          * Just output the iteration number.
@@ -228,11 +224,31 @@ namespace MultiBoost {
          * \param value The value to be added/updated
          * \date 05/07/2011
          */
-        void updateSpecificInfo(const string& type, AlphaReal value);
+//        void updateSpecificInfo(const string& type, AlphaReal value);
         
         BaseOutputInfoType* getOutputInfoObject(const string& type);
 
-                
+        /**
+         * Return the specific metric output for a given
+         * dataset and a given iteration. 
+         * If the iteration is -1, it returns the last value.
+         * \param pData The dataset on which the metric was computed.
+         * \param outputName The three caracters code of the output (the same as for --outputinfo argument).
+         * \param iteration The iteration at which the metric was computed.
+         * \date 05/04/2013
+         */
+        AlphaReal getOutputHistory(InputData *pData, const string& outputName, int iteration = -1);
+
+        /**
+         * Indicate whether a given Output information
+         * is activated.
+         * \param outputName The three caracters code of the output (the same as for --outputinfo argument).
+         * \date 05/04/2013
+         */        
+        bool outputIsActivated(const string& outputName);
+        
+        void setStartingIteration(unsigned int i) {_historyStartingIteration = i;}
+
     protected:
                 
                 
@@ -285,10 +301,8 @@ namespace MultiBoost {
          * Keeps the list of the output types the user wants to be output
          * \date 17/06/2011
          */
-        vector<BaseOutputInfoType*> _outputList;
-        
-        string _outputListString;
-        
+        map<string, BaseOutputInfoType*> _outputList;
+                
         /**
          * Creates the OutputInfoType instances
          * from a string
@@ -307,7 +321,8 @@ namespace MultiBoost {
          * The header output stream
          */
         fstream _headerOutStream;
-                
+      
+        unsigned int _historyStartingIteration; //to handle fastResume case
     };
     
     //////////////////////////////////////////////////////////////////////////////////////////////
@@ -327,6 +342,9 @@ namespace MultiBoost {
      */
     class BaseOutputInfoType
     {
+    protected:
+        map<InputData*, vector<AlphaReal> >       _outputHistory;
+        
     public:
         
         BaseOutputInfoType() {};
@@ -377,6 +395,8 @@ namespace MultiBoost {
 //         */
 //        virtual void updateSpecificInfo(const string& type, AlphaReal value) = 0;
         
+        AlphaReal getOutputHistory(InputData *pData, int iteration)
+        { return iteration < 0 ? _outputHistory[pData].back() : _outputHistory[pData].at(iteration); }
     };
         
 //    template<class T = AlphaReal>

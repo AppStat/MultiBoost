@@ -86,19 +86,21 @@ namespace MultiBoost {
             {
                 --numOfDimensions;
                 //if ( static_cast<SortedData*>(_pTrainingData)->isAttributeEmpty( j ) ) continue;
-                                
-                const pair<vpIterator,vpIterator> dataBeginEnd = 
-                    static_cast<SortedData*>(_pTrainingData)->getFilteredBeginEnd(j);
-                                
-                                
-                const vpIterator dataBegin = dataBeginEnd.first;
-                const vpIterator dataEnd = dataBeginEnd.second;
-                                
-                                
-                                
+                
+                const pair<pair<vpIterator,vpIterator>,
+                           pair<vpReverseIterator,vpReverseIterator> > dataSR = 
+                    static_cast<SortedData*>(_pTrainingData)->getFilteredandReverseBeginEnd(j);
+                
+                const vpIterator dataBegin = dataSR.first.first;
+                const vpIterator dataEnd = dataSR.first.second;
+                const vpReverseIterator dataReverseBegin = dataSR.second.first;
+                const vpReverseIterator dataReverseEnd = dataSR.second.second;
+                
+                FeatureReal mostFrequentFeatureValue = _pTrainingData->getMostFrequentValuePerFeature()[j];
+                
                 // also sets mu, tmpV, and bestHalfEdge
-                tmpThreshold = sAlgo.findSingleThresholdWithInit(dataBegin, dataEnd, _pTrainingData, 
-                                                                 halfTheta, &mu, &tmpV);
+                tmpThreshold = sAlgo.findSingleThresholdWithInit(dataBegin, dataEnd, dataReverseBegin, dataReverseEnd,
+                                                                 _pTrainingData, halfTheta, &mu, &tmpV,mostFrequentFeatureValue);
                                 
                 if (tmpThreshold == tmpThreshold) // tricky way to test Nan
                 { 
@@ -170,18 +172,21 @@ namespace MultiBoost {
                 
         int numOfDimensions = _maxNumOfDimensions;
                 
-                
-        const pair<vpIterator,vpIterator> dataBeginEnd = 
-            static_cast<SortedData*>(_pTrainingData)->getFilteredBeginEnd( colIdx );
-                
-                
-        const vpIterator dataBegin = dataBeginEnd.first;
-        const vpIterator dataEnd = dataBeginEnd.second;
-                
+        const pair<pair<vpIterator,vpIterator>,
+                   pair<vpReverseIterator,vpReverseIterator> > dataSR = 
+            static_cast<SortedData*>(_pTrainingData)->getFilteredandReverseBeginEnd(colIdx);
+
+        const vpIterator dataBegin = dataSR.first.first;
+        const vpIterator dataEnd = dataSR.first.second;
+        const vpReverseIterator dataReverseBegin = dataSR.second.first;
+        const vpReverseIterator dataReverseEnd = dataSR.second.second;
+
+        FeatureReal mostFrequentFeatureValue = _pTrainingData->getMostFrequentValuePerFeature()[colIdx];
+        
         // also sets mu, tmpV, and bestHalfEdge
-        _threshold = sAlgo.findSingleThresholdWithInit(dataBegin, dataEnd, _pTrainingData, 
-                                                       halfTheta, &mu, &tmpV);
-                
+        _threshold = sAlgo.findSingleThresholdWithInit(dataBegin, dataEnd, dataReverseBegin, dataReverseEnd,
+                                                       _pTrainingData, halfTheta, &mu, &tmpV, mostFrequentFeatureValue);
+        
         bestEnergy = getEnergy(mu, tmpAlpha, tmpV);
                 
         _alpha = tmpAlpha;
@@ -232,19 +237,22 @@ namespace MultiBoost {
         int numOfDimensions = _maxNumOfDimensions;
         for (int j = 0; j < (int)colIndexes.size(); ++j)
         {
-            const pair<vpIterator,vpIterator> dataBeginEnd = 
-                static_cast<SortedData*>(_pTrainingData)->getFilteredBeginEnd(colIndexes[j]);
-                        
-                        
-            const vpIterator dataBegin = dataBeginEnd.first;
-            const vpIterator dataEnd = dataBeginEnd.second;
-                        
-                        
-                        
+
+            const pair<pair<vpIterator,vpIterator>,
+                       pair<vpReverseIterator,vpReverseIterator> > dataSR = 
+                static_cast<SortedData*>(_pTrainingData)->getFilteredandReverseBeginEnd(j);
+
+            const vpIterator dataBegin = dataSR.first.first;
+            const vpIterator dataEnd = dataSR.first.second;
+            const vpReverseIterator dataReverseBegin = dataSR.second.first;
+            const vpReverseIterator dataReverseEnd = dataSR.second.second;
+            
+            FeatureReal mostFrequentFeatureValue = _pTrainingData->getMostFrequentValuePerFeature()[colIndexes[j]];
+            
             // also sets mu, tmpV, and bestHalfEdge
-            tmpThreshold = sAlgo.findSingleThresholdWithInit(dataBegin, dataEnd, _pTrainingData, 
-                                                             halfTheta, &mu, &tmpV);
-                        
+            tmpThreshold = sAlgo.findSingleThresholdWithInit(dataBegin, dataEnd, dataReverseBegin, dataReverseEnd,
+                                                             _pTrainingData, halfTheta, &mu, &tmpV,mostFrequentFeatureValue);            
+            
             if (tmpThreshold == tmpThreshold) // tricky way to test Nan
             { 
                 // small inconsistency compared to the standard algo (but a good

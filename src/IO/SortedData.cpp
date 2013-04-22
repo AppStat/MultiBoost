@@ -155,6 +155,14 @@ namespace MultiBoost {
         return make_pair(_filteredColumn.begin(),_filteredColumn.end());
     }
         
+    pair<pair<vpIterator,vpIterator>,
+         pair<vpReverseIterator,vpReverseIterator> > SortedData::getFilteredandReverseBeginEnd(int colIdx)
+    {
+        pair<vpIterator,vpIterator> dataBeginEnd = getFilteredBeginEnd(colIdx);
+        pair<vpReverseIterator,vpReverseIterator> dataReverseBeginEnd = 
+            make_pair(_filteredColumn.rbegin(),_filteredColumn.rend());
+        return make_pair(dataBeginEnd,dataReverseBeginEnd);
+    }
     // ------------------------------------------------------------------------
         
     pair<vpReverseIterator,vpReverseIterator> SortedData::getFilteredReverseBeginEnd(int colIdx) {

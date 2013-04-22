@@ -100,6 +100,7 @@ namespace MultiBoost {
 
     GenericStrongLearner* BaseLearner::createGenericStrongLearner( nor_utils::Args& args )
     {
+        initLearningOptions(args);
         string sHypothesisName = "";
         if ( args.hasArgument("stronglearner") ) 
         {

@@ -170,7 +170,7 @@ namespace MultiBoost {
         pq.push(nodeRight);
                 
                 
-        while ( ! pq.empty() )
+        while (ib < _numBaseLearners && ! pq.empty() )
         {
             NodePoint currentNode = pq.top();
             pq.pop();

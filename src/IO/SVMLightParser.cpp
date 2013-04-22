@@ -166,7 +166,7 @@ namespace MultiBoost {
                                      vector<NameMap>& enumMaps, NameMap& attributeNameMap,
                                      vector<RawData::eAttributeType>& attributeTypes )
     {
-        cout << "Reading header file (" << _headerFileName << ")...";
+        if (_verboseLevel > 0) cout << "Reading header file (" << _headerFileName << ")...";
         ifstream inHeaderFile(_headerFileName.c_str());
         if ( !inHeaderFile.is_open() )
         {
@@ -223,7 +223,7 @@ namespace MultiBoost {
         getline(inHeaderFile, tmpLine);
         if ( ! tmpLine.empty() )
         {
-            cout << "Read weighting...";
+            if (_verboseLevel > 0) cout << "Read weighting...";
             _weightOfClasses.clear();
                         
             ss.clear();
@@ -241,7 +241,7 @@ namespace MultiBoost {
                 
         inHeaderFile.close();
 
-        cout << "Done." << endl;
+        if (_verboseLevel > 0) cout << "Done." << endl;
     }
     // ------------------------------------------------------------------------
         
@@ -258,11 +258,11 @@ namespace MultiBoost {
                 
         if ( _numRows == 0 ) // if header file was provided, the data had not been parsed
         {
-            cout << "Counting rows.." << flush;
+            if (_verboseLevel > 0) cout << "Counting rows.." << flush;
             _numRows = nor_utils::count_rows(in);
         }
                 
-        cout << "Allocating.." << flush;
+        if (_verboseLevel > 0) cout << "Allocating.." << flush;
         try {
             examples.resize(_numRows);
         } 
@@ -270,9 +270,9 @@ namespace MultiBoost {
             cerr << "ERROR: Cannot allocate memory for storage!" << endl;
             exit(1);
         }
-        cout << "Done!" << endl;
+        if (_verboseLevel > 0) cout << "Done!" << endl;
                 
-        cout << "Now reading file.." << flush;
+        if (_verboseLevel > 0) cout << "Now reading file.." << flush;
         int i;
         vector<vector<int> > tmpLabelIdxs( _numRows );
                 
@@ -343,7 +343,7 @@ namespace MultiBoost {
             allocateSimpleLabels( tmpLabelIdxs[i], currExample.getLabels(), classMap );
         }
                 
-        cout << "Done!" << endl;
+        if (_verboseLevel > 0) cout << "Done!" << endl;
                 
         // set the number of attributes, it can be problem, that the test dataset contains such attributes which isn't presented in the training data
         _numAttributes = attributeNameMap.getNumNames();

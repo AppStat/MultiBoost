@@ -373,6 +373,13 @@ int main(int argc, const char* argv[])
         
     args.declareArgument("onlinetraining", "The weak learner will be trained online\n", 0, "" );
         
+    args.declareArgument("earlystopping", "Stop if smoothed test error has not improved for a while.\n"
+                         "In traintest mode we may stop before _numIterations iterations or _maxTime time.\n"
+                         "In iteration T, if T > <minIterations>, we compute the average test error in the last\n"
+                         "<smoothingWindowRate>*T iterations. Let the current minimum of this smoothed error be\n"
+                         "taken at Tmin. We stop if T > <maxLookaheadRate>*Tmin.", 
+                         3, "<minIterations> <smoothingWindowRate> <maxLookaheadRate>" );
+
     //// ignored for the moment!
     //args.declareArgument("arffheader", "Specify the arff header.", 1, "<arffHeaderFile>");
         

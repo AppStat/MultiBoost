@@ -139,8 +139,19 @@ namespace MultiBoost {
                                                 const vpIterator& dataEnd,
                                                 InputData* pData,
                                                 AlphaReal halfTheta,
-                                                vector<sRates>* pMu = NULL, vector<AlphaReal>* pV = NULL);
-
+                                                vector<sRates>* pMu, vector<AlphaReal>* pV
+            );
+        
+        FeatureReal findSingleThresholdWithInit(const vpIterator& dataBegin,
+                                                const vpIterator& dataEnd,
+                                                const vpReverseIterator& dataReverseBegin,
+                                                const vpReverseIterator& dataReverseEnd,
+                                                InputData* pData,
+                                                AlphaReal halfTheta,
+                                                vector<sRates>* pMu, vector<AlphaReal>* pV,
+                                                FeatureReal mostFrequentFeatureValue = 0
+            );
+        
         /**
          * Find the optimal thresholds (one for each class) that maximizes
          * the edge (or minimizes the error) on the given data weighted data.
@@ -227,48 +238,52 @@ namespace MultiBoost {
 
     } // end of findSingleThreshold
 
+    //////////////////////////////////////////////////////////////////////////
+
     template <typename T> 
         FeatureReal StumpAlgorithm<T>::findSingleThresholdWithInit
         (const vpIterator& dataBegin,const vpIterator& dataEnd,
-         InputData* pData, AlphaReal halfTheta, vector<sRates>* pMu, vector<AlphaReal>* pV)
+         InputData* pData, AlphaReal halfTheta, vector<sRates>* pMu, vector<AlphaReal>* pV
+            )
     { 
         const int numClasses = pData->getNumClasses();
-
+        
         vpIterator currentSplitPos; // the iterator of the currently examined example
         vpIterator previousSplitPos; // the iterator of the example before the current example
         vpIterator bestSplitPos; // the iterator of the best split
         vpIterator bestPreviousSplitPos; // the iterator of the example before the best split
-
-        // initialize halfEdges to the constant classifier's half edges 
-        copy(_constantHalfEdges.begin(), _constantHalfEdges.end(), _halfEdges.begin());
-
+        
         AlphaReal currHalfEdge = 0;
         AlphaReal bestHalfEdge = -numeric_limits<AlphaReal>::max();
         vector<Label>::const_iterator lIt;
-
+        
+        // initialize halfEdges to the constant classifier's half edges 
+        copy(_constantHalfEdges.begin(), _constantHalfEdges.end(), _halfEdges.begin());
+        
         // find the best threshold (cutting point)
         // at the first split we have
         // first split: x | x x x x x x x x ..
         //    previous -^   ^- current
+        //        int ii = 0;
         for( currentSplitPos = previousSplitPos = dataBegin, ++currentSplitPos;
              currentSplitPos != dataEnd; 
              previousSplitPos = currentSplitPos, ++currentSplitPos)
         {
             vector<Label>& labels = pData->getLabels(previousSplitPos->first);
-
+            
             // recompute halfEdges at the next point
             ////// Bottleneck BEGIN
             for (lIt = labels.begin(); lIt != labels.end(); ++lIt )
                 _halfEdges[ lIt->idx ] -= lIt->weight * lIt->y;
             ////// Bottleneck END
-
+            
             // points with the same value of data: to skip because we cannot find a cutting point here!
             // so we only do the cutting if there is a "hole":
             if ( previousSplitPos->second != currentSplitPos->second ) 
             {
-
+                
                 currHalfEdge = 0;
-
+                
                 ////// Bottleneck BEGIN
                 if ( nor_utils::is_zero(halfTheta) ) { // we save an "if" in the loop, 20% faster
                     for (int l = 0; l < numClasses; ++l) { 
@@ -291,26 +306,29 @@ namespace MultiBoost {
                     }
                 }
                 ////// Bottleneck END
-
+                
+                //                cout << ii << ": " << currHalfEdge << "\t" << "\t" << previousSplitPos->second << "\t" << currentSplitPos->second << endl;
+                //                ii++;
+                
                 // the current edge is the new maximum
                 if (currHalfEdge > bestHalfEdge)
                 {
                     bestHalfEdge = currHalfEdge;
                     bestSplitPos = currentSplitPos; 
                     bestPreviousSplitPos = previousSplitPos; 
-
+                    
                     for (int l = 0; l < numClasses; ++l)
                         _bestHalfEdges[l] = _halfEdges[l];
                 }
             }
         }
-
+        
         // If we found a valid stump in this dimension
         if (bestHalfEdge >  -numeric_limits<AlphaReal>::max()) 
         {
             FeatureReal threshold = static_cast<FeatureReal>( bestPreviousSplitPos->second + 
                                                               bestSplitPos->second ) / 2;
-
+            
             // Fill the mus if present. This could have been done in the threshold loop, 
             // but here is done just once
             if ( pMu ) 
@@ -322,9 +340,9 @@ namespace MultiBoost {
                         (*pV)[l] = +1;
                     else
                         (*pV)[l] = -1;
-
+                    
                     (*pMu)[l].classIdx = l;
-
+                    
                     (*pMu)[l].rPls  = _halfWeightsPerClass[l] + (*pV)[l] * _bestHalfEdges[l];
                     (*pMu)[l].rMin  = _halfWeightsPerClass[l] - (*pV)[l] * _bestHalfEdges[l];
                     (*pMu)[l].rZero = (*pMu)[l].rPls + (*pMu)[l].rMin; // == weightsPerClass[l]
@@ -335,11 +353,203 @@ namespace MultiBoost {
         }
         else
             return numeric_limits<FeatureReal>::signaling_NaN();
-
+        
     } // end of findSingleThresholdWithInit
-
+    
     //////////////////////////////////////////////////////////////////////////
-
+    template <typename T> 
+        FeatureReal StumpAlgorithm<T>::findSingleThresholdWithInit
+        (const vpIterator& dataBegin,const vpIterator& dataEnd,
+         const vpReverseIterator& dataReverseBegin,const vpReverseIterator& dataReverseEnd,
+         InputData* pData, AlphaReal halfTheta, vector<sRates>* pMu, vector<AlphaReal>* pV,
+         FeatureReal mostFrequentFeatureValue
+            )
+    { 
+        const int numClasses = pData->getNumClasses();
+        
+        FeatureReal bestSplit; // the value of the best split
+        FeatureReal bestPreviousSplit; // the value of the example before the best split
+        
+        AlphaReal currHalfEdge = 0;
+        AlphaReal bestHalfEdge = -numeric_limits<AlphaReal>::max();
+        vector<Label>::const_iterator lIt;
+ 
+        vpIterator currentSplitPos; // the iterator of the currently examined example
+        vpIterator previousSplitPos; // the iterator of the example before the current example
+        
+        // initialize halfEdges to the constant classifier's half edges 
+        copy(_constantHalfEdges.begin(), _constantHalfEdges.end(), _halfEdges.begin());
+        
+        // find the best threshold (cutting point)
+        // at the first split we have
+        // first split: x | x x x x x x x x ..
+        //    previous -^   ^- current
+        //        int ii = 0;
+        for( currentSplitPos = previousSplitPos = dataBegin, ++currentSplitPos;
+             currentSplitPos != dataEnd && previousSplitPos->second < mostFrequentFeatureValue - 0.00000001; 
+             previousSplitPos = currentSplitPos, ++currentSplitPos)
+        {
+            vector<Label>& labels = pData->getLabels(previousSplitPos->first);
+            
+            // recompute halfEdges at the next point
+            ////// Bottleneck BEGIN
+            for (lIt = labels.begin(); lIt != labels.end(); ++lIt )
+                _halfEdges[ lIt->idx ] -= lIt->weight * lIt->y;
+            ////// Bottleneck END
+            
+            // points with the same value of data: to skip because we cannot find a cutting point here!
+            // so we only do the cutting if there is a "hole":
+            if ( previousSplitPos->second != currentSplitPos->second ) 
+            {
+                
+                currHalfEdge = 0;
+                
+                ////// Bottleneck BEGIN
+                if ( nor_utils::is_zero(halfTheta) ) { // we save an "if" in the loop, 20% faster
+                    for (int l = 0; l < numClasses; ++l) { 
+                        // flip the class-wise edge if it is negative
+                        // but store the flipping bit only at the end (below**)
+                        if ( _halfEdges[l] > 0 )
+                            currHalfEdge += _halfEdges[l];
+                        else
+                            currHalfEdge -= _halfEdges[l];
+                    }
+                }
+                else {
+                    for (int l = 0; l < numClasses; ++l) { 
+                        // flip the class-wise edge if it is negative
+                        // but store the flipping bit only at the end (below**)
+                        if ( _halfEdges[l] > halfTheta )
+                            currHalfEdge += _halfEdges[l];
+                        else if ( _halfEdges[l] < -halfTheta )
+                            currHalfEdge -= _halfEdges[l];
+                    }
+                }
+                ////// Bottleneck END
+                
+                //                cout << ii << ": " << currHalfEdge << "\t" << "\t" << previousSplitPos->second << "\t" << currentSplitPos->second << endl;
+                //                ii++;
+                
+                // the current edge is the new maximum
+                if (currHalfEdge > bestHalfEdge)
+                {
+                    bestHalfEdge = currHalfEdge;
+                    bestSplit = currentSplitPos->second; 
+                    bestPreviousSplit = previousSplitPos->second; 
+                    
+                    for (int l = 0; l < numClasses; ++l)
+                        _bestHalfEdges[l] = _halfEdges[l];
+                }
+            }
+        }
+        
+        vpReverseIterator currentReverseSplitPos; // the iterator of the currently examined example
+        vpReverseIterator previousReverseSplitPos; // the iterator of the example before the current example
+        
+        // initialize halfEdges to the constant classifier's half edges 
+        copy(_constantHalfEdges.begin(), _constantHalfEdges.end(), _halfEdges.begin());
+//        for (int l = 0; l < numClasses; ++l)
+//            _halfEdges[l] *= -1.0;
+        
+        
+        // find the best threshold (cutting point)
+        // at the first split we have
+        // first split: x | x x x x x x x x ..
+        //    previous -^   ^- current
+        //        ii = 0;
+        for( currentReverseSplitPos = previousReverseSplitPos = dataReverseBegin, ++currentReverseSplitPos;
+             currentReverseSplitPos != dataReverseEnd && previousReverseSplitPos->second > mostFrequentFeatureValue + 0.00000001; 
+             previousReverseSplitPos = currentReverseSplitPos, ++currentReverseSplitPos)
+        {
+            vector<Label>& labels = pData->getLabels(previousReverseSplitPos->first);
+            
+            // recompute halfEdges at the next point
+            ////// Bottleneck BEGIN
+            for (lIt = labels.begin(); lIt != labels.end(); ++lIt )
+                _halfEdges[ lIt->idx ] -= lIt->weight * lIt->y;
+            ////// Bottleneck END
+            
+            // points with the same value of data: to skip because we cannot find a cutting point here!
+            // so we only do the cutting if there is a "hole":
+            if ( previousReverseSplitPos->second != currentReverseSplitPos->second ) 
+            {
+                
+                currHalfEdge = 0;
+                
+                ////// Bottleneck BEGIN
+                if ( nor_utils::is_zero(halfTheta) ) { // we save an "if" in the loop, 20% faster
+                    for (int l = 0; l < numClasses; ++l) { 
+                        // flip the class-wise edge if it is negative
+                        // but store the flipping bit only at the end (below**)
+                        if ( _halfEdges[l] > 0 )
+                            currHalfEdge += _halfEdges[l];
+                        else
+                            currHalfEdge -= _halfEdges[l];
+                    }
+                }
+                else {
+                    for (int l = 0; l < numClasses; ++l) { 
+                        // flip the class-wise edge if it is negative
+                        // but store the flipping bit only at the end (below**)
+                        if ( _halfEdges[l] > halfTheta )
+                            currHalfEdge += _halfEdges[l];
+                        else if ( _halfEdges[l] < -halfTheta )
+                            currHalfEdge -= _halfEdges[l];
+                    }
+                }
+                ////// Bottleneck END
+                
+                // the current edge is the new maximum
+                // we use >= for backward compatibility, later we can change it to >
+                //                cout << ii << ": " << currHalfEdge << "\t" << "\t" << previousSplitPos->second << "\t" << currentSplitPos->second << endl;
+                //                ii++;x
+                if (currHalfEdge > bestHalfEdge-0.00000001)
+                {
+                    bestHalfEdge = currHalfEdge;
+                    bestSplit = previousReverseSplitPos->second; 
+                    bestPreviousSplit = currentReverseSplitPos->second; 
+                    
+                    for (int l = 0; l < numClasses; ++l)
+                        // This is the only point where the symmetry between the two loops break.
+                        _bestHalfEdges[l] = -_halfEdges[l];
+                }
+            }
+        }
+        
+        // If we found a valid stump in this dimension
+        if (bestHalfEdge >  -numeric_limits<AlphaReal>::max()) 
+        {
+            FeatureReal threshold = static_cast<FeatureReal>( bestPreviousSplit + bestSplit) / 2;
+            
+            // Fill the mus if present. This could have been done in the threshold loop, 
+            // but here is done just once
+            if ( pMu ) 
+            {
+                for (int l = 0; l < numClasses; ++l)
+                {
+                    // **here
+                    if (_bestHalfEdges[l] > 0)
+                        (*pV)[l] = +1;
+                    else
+                        (*pV)[l] = -1;
+                    
+                    (*pMu)[l].classIdx = l;
+                    
+                    (*pMu)[l].rPls  = _halfWeightsPerClass[l] + (*pV)[l] * _bestHalfEdges[l];
+                    (*pMu)[l].rMin  = _halfWeightsPerClass[l] - (*pV)[l] * _bestHalfEdges[l];
+                    (*pMu)[l].rZero = (*pMu)[l].rPls + (*pMu)[l].rMin; // == weightsPerClass[l]
+                }
+            }
+            //cout << 2 * bestHalfEdge << endl << flush;
+            return threshold;
+        }
+        else
+            return numeric_limits<FeatureReal>::signaling_NaN();
+        
+    } // end of findSingleThresholdWithInit
+    
+    //////////////////////////////////////////////////////////////////////////
+    
     template <typename T> 
         void StumpAlgorithm<T>::findMultiThresholds(const vpIterator& dataBegin,
                                                     const vpIterator& dataEnd,

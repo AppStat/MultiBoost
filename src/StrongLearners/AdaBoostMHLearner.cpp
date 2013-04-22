@@ -54,14 +54,13 @@ namespace MultiBoost {
 
     void AdaBoostMHLearner::getArgs(const nor_utils::Args& args)
     {
+
         if ( args.hasArgument("verbose") )
             args.getValue("verbose", 0, _verbose);
 
         // The file with the step-by-step information
         if ( args.hasArgument("outputinfo") )
             args.getValue("outputinfo", 0, _outputInfoFile);
-        else 
-            _outputInfoFile = string(OUTPUT_NAME);
                 
         ///////////////////////////////////////////////////
         // get the output strong hypothesis file name, if given
@@ -103,6 +102,7 @@ namespace MultiBoost {
         if ( args.hasArgument("learnertype") )
             args.getValue("learnertype", 0, _baseLearnerName);
 
+        _earlyStopping = false;
         // -train <dataFile> <nInterations>
         if ( args.hasArgument("train") )
         {
@@ -115,7 +115,17 @@ namespace MultiBoost {
             args.getValue("traintest", 0, _trainFileName);
             args.getValue("traintest", 1, _testFileName);
             args.getValue("traintest", 2, _numIterations);
+            
+            // --earlystopping <minIterations> <smoothingWindowRate> <maxLookaheadRate>
+            if ( args.hasArgument("earlystopping") )
+            {
+                _earlyStopping = true;
+                args.getValue("earlystopping", 0, _earlyStoppingMinIterations);
+                args.getValue("earlystopping", 1, _earlyStoppingSmoothingWindowRate);
+                args.getValue("earlystopping", 2, _earlyStoppingMaxLookaheadRate); 
+            }
         }
+        
 
         // --constant: check constant learner in each iteration
         if ( args.hasArgument("constant") )
@@ -130,6 +140,7 @@ namespace MultiBoost {
         if ( args.hasArgument("weights") ) {
             args.getValue("weights", 0, _weightFile );
         }
+                
     }
 
     // -----------------------------------------------------------------------------------
@@ -223,6 +234,10 @@ namespace MultiBoost {
         ///////////////////////////////////////////////////////////////////////
         // Starting the AdaBoost main loop
         ///////////////////////////////////////////////////////////////////////
+        _currentMinT = startingIteration; // early stopping
+        AlphaReal currentMin = 1.0;
+        AlphaReal sumErrorWindow = 0.0;
+        int numErrorWindow = 0;
         for (int t = startingIteration; t < _numIterations; ++t)
         {
             if (_verbose > 1)
@@ -246,7 +261,7 @@ namespace MultiBoost {
                 pConstantWeakHypothesis->setTrainingData(pTrainingData);
                 AlphaReal constantEnergy = pConstantWeakHypothesis->run();
 
-                if ( (constantEnergy <= energy) || ( energy != energy ) ) {
+                if ( (constantEnergy <= energy) || ( energy != energy ) || ( nor_utils::is_zero(constantEnergy - energy))) {
                     delete pWeakHypothesis;
                     pWeakHypothesis = pConstantWeakHypothesis;
                 }
@@ -292,7 +307,30 @@ namespace MultiBoost {
 
             // Add it to the internal list of weak hypotheses
             _foundHypotheses.push_back(pWeakHypothesis); 
-
+            if (_earlyStopping)
+            {
+                sumErrorWindow += pOutInfo->getOutputHistory(pTestData,"e01", t);
+                numErrorWindow += 1;
+                while (numErrorWindow > _earlyStoppingSmoothingWindowRate * t + 1) 
+                {
+                    sumErrorWindow -= pOutInfo->getOutputHistory(pTestData,"e01", t - numErrorWindow + 1);
+                    numErrorWindow -= 1;
+                }
+                if (t > _earlyStoppingMinIterations) 
+                {
+                    if (sumErrorWindow/numErrorWindow < currentMin) 
+                    {
+                        currentMin = sumErrorWindow/numErrorWindow;
+                        _currentMinT = t;
+                    }
+                    //cout << t << ": " << sumErrorWindow/numErrorWindow << " " << _currentMinT << endl;
+                    if (t > _currentMinT * _earlyStoppingMaxLookaheadRate)
+                    {
+                        break;
+                    }
+                }
+            }
+            
             // check if the time limit has been reached
             if (_maxTime > 0)
             {
@@ -495,6 +533,7 @@ namespace MultiBoost {
                 
         //upload the margins 
         pOutInfo->setTable( pData, _hy );
+        pOutInfo->setStartingIteration(numIters);
         return 0;
     }
 
@@ -815,7 +854,7 @@ namespace MultiBoost {
                 pConstantWeakHypothesis->setTrainingData(pTrainingData);
                 AlphaReal constantEnergy = pConstantWeakHypothesis->run();
                                 
-                if ( (constantEnergy <= energy) || ( energy != energy ) ) {
+                if ( (constantEnergy <= energy) || ( energy != energy ) || ( nor_utils::is_zero(constantEnergy - energy))) {
                     delete pWeakHypothesis;
                     pWeakHypothesis = pConstantWeakHypothesis;
                 }

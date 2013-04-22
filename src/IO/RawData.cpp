@@ -77,7 +77,8 @@ namespace MultiBoost {
         case FF_SVMLIGHT:
             pParser = new SVMLightParser( fileName, _headerFile );                          
         }
-                
+        
+        pParser->_verboseLevel = verboseLevel;
         if (verboseLevel > 0)
             cout << "Loading file " << fileName << ":" << endl;
                 

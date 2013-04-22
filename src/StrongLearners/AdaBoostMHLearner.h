@@ -236,7 +236,21 @@ namespace MultiBoost {
         string  _weightFile; // !< The filename of the weights, if this is empty then it won't output the weights
         
         bool _withConstantLearner; //!< Check or not constant learner in each iteration 
-        bool _fastResumeProcess; //Fast resume process (true), it will calculate only the error rate of the last iteration.
+        bool _fastResumeProcess; //!< Fast resume process (true), it will calculate only the error rate of the last iteration.
+
+        /**
+         * In traintest mode we may stop before _numIterations iterations or _maxTime time. In iteration T,
+         * if T > _earlyStoppingMinIterations, we compute the average test error in the last 
+         * _earlyStoppingSmoothingWindowRate* Titerations. Let the current minimum of this smoothed error be taken 
+         * at Tmin. We stop if T > _earlyStoppingMaxLookaheadRate*Tmin.
+         */
+        bool _earlyStopping; //!< stop before _numIterations iterations if testError does not improve (only with traintest) 
+        int _earlyStoppingMinIterations; //!< don't early stop before _earlyStoppingMinIterations iterations
+        double _earlyStoppingSmoothingWindowRate; //!< test errors are averaged in the last _earlyStoppingSmoothingWindowRate*T 
+        //iterations
+        int _earlyStoppingMaxLookaheadRate; //!< if the minimum is reached at Tmin, 
+                                            //we stop after _earlyStoppingMaxLookaheadRate*Tmin iterations
+        int _currentMinT; //!< the iteration where the smoothed error is minimal so far
         ////////////////////////////////////////////////////////////////
     private:
         /**

@@ -439,7 +439,7 @@ namespace MultiBoost {
         if ( !_outputInfoFile.empty() ) 
         {
             pOutInfo = new OutputInfo(args, true);
-            pOutInfo->setOutputList("sca", false, &args);
+            pOutInfo->setOutputList("sca", &args);
             
             pOutInfo->initialize(pTrainingData);
             

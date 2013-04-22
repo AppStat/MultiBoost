@@ -107,7 +107,13 @@ namespace MultiBoost
          * \data 30/07/2011 
          */
         bool  hasWeightInitialized()    const { return _hasWeigthInit; }
-                
+
+        /** 
+         * Verbose Level for parsing stages
+         *
+         */
+        int _verboseLevel;
+
     protected:
         /**
          * The data file name.
@@ -139,7 +145,8 @@ namespace MultiBoost
          * \data 30/07/2011 
          */
         bool          _hasWeigthInit;
-                
+        
+
     };
         
     ////////////////////////////////////////////////////////////////

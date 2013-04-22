@@ -48,6 +48,9 @@ namespace MultiBoost {
     OutputInfo::OutputInfo(const nor_utils::Args& args, bool customUpdate, const string & clArg)
     {
         _customTablesUpdate = customUpdate;
+     
+        _historyStartingIteration = 0;
+        _outputList.clear();
         
         string outputInfoFile;
         args.getValue(clArg, 0, outputInfoFile);
@@ -60,7 +63,7 @@ namespace MultiBoost {
         }
         else
         {
-            _outputList.push_back(BaseOutputInfoType::createOutput(defaultOutput));
+            _outputList[defaultOutput] = BaseOutputInfoType::createOutput(defaultOutput);
         }
 
         // open the stream
@@ -95,7 +98,7 @@ namespace MultiBoost {
         if ( !_headerOutStream.is_open() )
         {
             cerr << "WARNING: cannot find the header output steam (<"
-            << headerFileName << ">). A new header file will be created." << endl;
+                 << headerFileName << ">). A new header file will be created." << endl;
             
             // try to create the file if it doesn't exist
             headerflag = ios_base::out;
@@ -165,30 +168,26 @@ namespace MultiBoost {
 
     // -------------------------------------------------------------------------
         
-    void OutputInfo::setOutputList(const string& list, bool append, const nor_utils::Args* args)
+    void OutputInfo::setOutputList(const string& list, const nor_utils::Args* args)
     {
-        if (append) {
-            _outputListString += list;
-        }
-        else {
-            _outputListString = list;
-        }
-        
-        getOutputListFromString(_outputListString, args);
+        getOutputListFromString(list, args);
     }
     // -------------------------------------------------------------------------
     
     void OutputInfo::getOutputListFromString(const string& outList,  const nor_utils::Args* args)
     {
-        _outputList.clear();
         for (int i = 0; i < outList.size(); i+=3) 
         {
-            BaseOutputInfoType* t = BaseOutputInfoType::createOutput(outList.substr(i, 3), args);
-            if ( t )  _outputList.push_back(t);
+            string outputName = outList.substr(i, 3);
+            if (_outputList.find(outputName) == _outputList.end())
+            {
+                BaseOutputInfoType* t = BaseOutputInfoType::createOutput(outputName, args);
+                if ( t )  _outputList[outputName] = t;
+            }
         }
         
         if ( _outputList.size() == 0 )
-            _outputList.push_back(BaseOutputInfoType::createOutput(defaultOutput));
+            _outputList[defaultOutput] = BaseOutputInfoType::createOutput(defaultOutput);
 
 
     }
@@ -208,7 +207,7 @@ namespace MultiBoost {
         // the number of datasets used
         for (int i = 0; i < numDatasets; ++i) {
             for (outputIt = _outputList.begin(); outputIt != _outputList.end(); ++outputIt) {
-                (*outputIt)->outputHeader(_headerOutStream, namemap);
+                outputIt->second->outputHeader(_headerOutStream, namemap);
                 _headerOutStream << OUTPUT_SEPARATOR;
             }
         }
@@ -222,7 +221,7 @@ namespace MultiBoost {
             
             // description of the different columns
             for (outputIt = _outputList.begin(); outputIt != _outputList.end(); ++outputIt) {
-                (*outputIt)->outputDescription(_headerOutStream);
+                outputIt->second->outputDescription(_headerOutStream);
                 _headerOutStream << endl;
             }
         }
@@ -236,12 +235,15 @@ namespace MultiBoost {
             updateTables(pData, pWeakHypothesis);
         }
         
+        size_t numOutput = _outputList.size();
+        
         _outStream << setiosflags(ios::fixed) << setprecision(6);
         
         OutInfIt outputIt;
-        for (outputIt = _outputList.begin(); outputIt != _outputList.end(); ++outputIt) {
-            (*outputIt)->computeAndOutput(_outStream, pData, _gTableMap, _margins, _alphaSums, pWeakHypothesis);
-            if ((outputIt+1) != _outputList.end()) _outStream << OUTPUT_SEPARATOR;
+        int i = 0;
+        for (outputIt = _outputList.begin(); outputIt != _outputList.end(); ++outputIt, ++i) {
+            outputIt->second->computeAndOutput(_outStream, pData, _gTableMap, _margins, _alphaSums, pWeakHypothesis);
+            if ((i+1) != numOutput) _outStream << OUTPUT_SEPARATOR;
         } 
         
     }
@@ -294,10 +296,22 @@ namespace MultiBoost {
     
     BaseOutputInfoType* OutputInfo::getOutputInfoObject(const string& type)
     {
-        long position = _outputListString.find(type);
-        assert (position != string::npos);
-        return _outputList[position];
+        return _outputList[type];
     }
+    
+    // -----------------------------------------------------------------------------------
+    
+    AlphaReal OutputInfo::getOutputHistory(InputData *pData, const string& outputName, int iteration)
+    { return _outputList[outputName]->getOutputHistory(pData, iteration - _historyStartingIteration); }
+    
+    // -----------------------------------------------------------------------------------
+    
+    bool OutputInfo::outputIsActivated(const string& outputName)
+    {
+        OutInfIt outputIt = _outputList.find(outputName);
+        return !(outputIt == _outputList.end());
+    }
+    
     
     // -------------------------------------------------------------------------
     
@@ -380,6 +394,7 @@ namespace MultiBoost {
     }
 
 #pragma mark Subclasses 
+    
     // -------------------------------------------------------------------------        
     // -------------------------------------------------------------------------        
 
@@ -425,7 +440,9 @@ namespace MultiBoost {
         
         
         // The error is normalized by the number of points
-        outStream  << (AlphaReal)(numErrors)/(AlphaReal)(numExamples);
+        AlphaReal output = (AlphaReal)(numErrors)/(AlphaReal)(numExamples);
+        outStream  << output ;
+        _outputHistory[pData].push_back(output);
         
     }
 
@@ -474,7 +491,9 @@ namespace MultiBoost {
         
         
         // The error is normalized by the number of points
-        outStream  << (AlphaReal)(numErrors)/(AlphaReal)(numExamples);
+        AlphaReal output = (AlphaReal)(numErrors)/(AlphaReal)(numExamples);
+        outStream  << output ;
+        _outputHistory[pData].push_back(output);
         
     }
                 
@@ -533,9 +552,11 @@ namespace MultiBoost {
         }
         
         // The error is normalized by the sum of positive weights
-        outStream << 1-(posWeights/sumWeight);                
+        AlphaReal output = 1-(posWeights/sumWeight);
+        outStream  << output ;
+        _outputHistory[pData].push_back(output);
     }
-        
+    
     // -------------------------------------------------------------------------        
     // -------------------------------------------------------------------------    
         
@@ -565,7 +586,9 @@ namespace MultiBoost {
         }        
         
         // The error is normalized by the number of points
-        outStream  << (AlphaReal)(numErrors)/(AlphaReal)(numExamples*numClasses);
+        AlphaReal output = (AlphaReal)(numErrors)/(AlphaReal)(numExamples*numClasses);
+        outStream  << output ;
+        _outputHistory[pData].push_back(output);
     }
     
     // -------------------------------------------------------------------------        
@@ -601,8 +624,9 @@ namespace MultiBoost {
         
         
         // The error is normalized by the number of points
-        outStream  << (negWeights/sumWeights);
-        
+        AlphaReal output = (negWeights/sumWeights);
+        outStream  << output ;
+        _outputHistory[pData].push_back(output);
     }
         
     // -------------------------------------------------------------------------        
@@ -657,8 +681,11 @@ namespace MultiBoost {
             }
             sumWeight += sumPerInstanceWeight;
         }
+        
         // The error is normalized by the sum of positive weights
-        outStream << 1-(posWeights/sumWeight);
+        AlphaReal output = 1-(posWeights/sumWeight);
+        outStream  << output ;
+        _outputHistory[pData].push_back(output);
     }
 
     // -------------------------------------------------------------------------        
@@ -733,6 +760,7 @@ namespace MultiBoost {
         bACC /= (AlphaReal) numClasses;
         
         outStream << bACC;
+        _outputHistory[pData].push_back(bACC);
         
         for( int i = 0; i < numClasses; i++ ) {
             outStream << OUTPUT_SEPARATOR << bacPerClass[i];
@@ -781,9 +809,11 @@ namespace MultiBoost {
             mae += fabs(tmpVal);                                  
             mse += tmpVal * tmpVal;                               
         }
-                
-        outStream << mae/(AlphaReal)(numExamples) << OUTPUT_SEPARATOR << sqrt(mse/(AlphaReal)(numExamples));
-                
+        
+        AlphaReal firstOutput = mae/(AlphaReal)(numExamples);
+        outStream << firstOutput << OUTPUT_SEPARATOR << sqrt(mse/(AlphaReal)(numExamples));
+        _outputHistory[pData].push_back(firstOutput);
+        
     }
     
     // -------------------------------------------------------------------------        
@@ -814,9 +844,11 @@ namespace MultiBoost {
                 if (margins[i][lIt->idx] < minMargin)
                     minMargin = margins[i][lIt->idx];
             }
-        }       
+        }
                 
-        outStream << minMargin / alphaSums[pData] ;
+        AlphaReal output = minMargin / alphaSums[pData] ;
+        outStream << output;
+        _outputHistory[pData].push_back(output);
     }
         
     // -------------------------------------------------------------------------        
@@ -845,8 +877,10 @@ namespace MultiBoost {
             }
         }
                 
-        outStream << gamma; // edge
-                
+        AlphaReal output = gamma; // edge
+        outStream << output;
+        _outputHistory[pData].push_back(output);
+        
     }
         
     // -------------------------------------------------------------------------        
@@ -908,7 +942,9 @@ namespace MultiBoost {
             ROCsum += ROCscores[i];
         }
         ROCsum /= (double) numClasses;
-                
+        
+        _outputHistory[pData].push_back(ROCsum);
+        
         outStream << ROCsum; // mean of AUC
         for( int i=0; i < numClasses; i++ ) {
             outStream << OUTPUT_SEPARATOR << ROCscores[i];
