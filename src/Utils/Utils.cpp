@@ -188,34 +188,44 @@ namespace nor_utils {
     size_t count_columns(istream& in)
     {
         size_t nCols = 0;
-        bool inCol = false;
-        int c = 0;
-                
+        string line;        
+
         // Remember current position
         ios::pos_type currPos = in.tellg();
                 
-        while( !in.eof() )
-        {
-            c = in.get();
-                        
-            if ( c == '\n' || c == '\r' )
-                break;
-                        
-            if (isspace(c))
-            {
-                if (inCol)
-                    inCol = false;
-            }
-            else
-            {
-                if (!inCol)
-                {
-                    inCol = true;
-                    ++nCols;
-                }
-            }
-                        
-        }
+        locale curloc = in.getloc();
+        in.imbue(locale(locale(), new nor_utils::white_spaces("\r\n")));
+        in >> line;
+        in.imbue(curloc);
+        
+        std::stringstream is(line);
+        is.imbue(curloc);
+
+        FeatureReal v;
+        while (is >> v) nCols++;
+
+        //while( !in.eof() )
+        //{
+        //    c = in.get();
+        //                
+        //    if ( c == '\n' || c == '\r' )
+        //        break;
+        //                
+        //    if (isspace(c))
+        //    {
+        //        if (inCol)
+        //            inCol = false;
+        //    }
+        //    else
+        //    {
+        //        if (!inCol)
+        //        {
+        //            inCol = true;
+        //            ++nCols;
+        //        }
+        //    }
+        //                
+        //}
                 
         // Put read pointer back to where it was
         in.seekg(currPos, ios::beg);

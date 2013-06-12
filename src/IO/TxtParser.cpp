@@ -81,13 +81,14 @@ namespace MultiBoost {
                 
         string tmpExampleName;
         string tmpClassName;
-                
+        vector<string> tmpClassStored;
         if (_verboseLevel > 0) cout << "Counting rows.." << flush;
         size_t numRows = nor_utils::count_rows(inFile);
                 
         if (_verboseLevel > 0) cout << "Allocating.." << flush;
         try {
             examples.resize(numRows);
+            tmpClassStored.resize(numRows);
         } 
         catch(...) {
             cerr << "ERROR: Cannot allocate memory for storage!" << endl;
@@ -126,13 +127,13 @@ namespace MultiBoost {
                 inFile >> tmpClassName; // store class
                         
             int classIdx = classMap.addName(tmpClassName);
-            if ( classIdx > 1 )
-            {
-                cerr << "ERROR: Only binary labels are accepted (max 2!) for .txt parser!!" << endl;
-                exit(1);
-            }
-                        
-            currExample.addBinaryLabel(classIdx);
+            tmpClassStored[i] = tmpClassName;
+            //if ( classIdx > 1 )
+            //{
+            //    cerr << "ERROR: Only binary labels are accepted (max 2!) for .txt parser!!" << endl;
+            //    exit(1);
+            //}
+//            currExample.addBinaryLabel(classIdx);
         }
                 
         if ( i != examples.size() )
@@ -144,6 +145,28 @@ namespace MultiBoost {
             examples.resize(i);
         }
                 
+        /// xxx fradav adding 
+        for (int i = 0; i < _numAttributes; i++)
+        {
+            std::ostringstream oss;
+            oss << "a" << i;
+            attributeNameMap.addName(oss.str());
+            attributeTypes.push_back(RawData::ATTRIBUTE_NUMERIC);
+        }
+
+        const int numClasses = classMap.getNumNames();
+        for (int i = 0; i < numRows; i++)
+        {
+            vector<Label> labels;
+            labels.resize(numClasses);
+                    for ( int j = 0; j < numClasses; ++j )
+            {
+                labels[j].idx = j;
+                labels[j].y = -1;
+            }
+            labels[ classMap.getIdxFromName(tmpClassStored[i]) ].y = +1;
+            examples[i].addLabels(labels);
+        }
         if (_verboseLevel > 0) cout << "Done!" << endl;
     }
         

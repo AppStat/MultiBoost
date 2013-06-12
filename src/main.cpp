@@ -332,7 +332,8 @@ int main(int argc, const char* argv[])
     // Basic Arguments
         
     args.setGroup("Parameters");
-        
+    
+    args.declareArgument("configfile", "Read some or all the argument from a config file.", 1, "<config file>");
     args.declareArgument("train", "Performs training.", 2, "<dataFile> <nInterations>");
     args.declareArgument("traintest", "Performs training and test at the same time.", 3, "<trainingDataFile> <testDataFile> <nInterations>");
     args.declareArgument("trainvalidtest", "Performs training and test at the same time.", 4, "<trainingDataFile> <validDataFile> <testDataFile> <nInterations>");

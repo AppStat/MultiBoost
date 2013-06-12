@@ -313,8 +313,12 @@ namespace nor_utils {
 
             if (numVals == 0)
                 _resArgs[argName].push_back("");
-            for (int j = 0; j < numVals; ++j)
-                _resArgs[argName].push_back(argv[++i]);
+            else
+            {
+                _resArgs[argName].resize(numVals);
+                for (int j = 0; j < numVals; ++j)
+                    _resArgs[argName][j] = argv[++i];
+            }
         }
 
         return AOT_OK;
@@ -534,7 +538,7 @@ namespace nor_utils {
         if (argc < 2 )
             return AOT_NO_ARGUMENTS;
     
-//    ArgsOutType res;
+        ArgsOutType result;
 
         for (int i = 1; i < argc; ++i)
         {
@@ -545,7 +549,11 @@ namespace nor_utils {
                 if (argName.compare(_configFileString) == 0) {
                     if (i+1 < argc && !hasArgumentDiscriminator(argv[i+1])) {
                         string configPath = argv[i+1];
-                        return parseConfigFile(configPath);
+                        result = parseConfigFile(configPath);
+                        
+                        if (result != AOT_OK) {
+                            return result;
+                        }
                     }
                     else {
                         cerr << "ERROR : Please provide a correct name for the configuration file, right after " << _argDiscriminator << _configFileString << ".\n";

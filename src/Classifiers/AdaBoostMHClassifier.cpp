@@ -229,12 +229,12 @@ namespace MultiBoost {
         if (_verbose > 0)
         {
             cout << "Raw Confusion Matrix:\n";
-            cout << setw(colSize) << "Truth       ";
+            cout << setw(colSize) << "Prediction       ";
 
             for (int l = 0; l < numClasses; ++l)
                 cout << setw(colSize) << nor_utils::getAlphanumeric(l);
 
-            cout << "\nClassification\n";
+            cout << "\nTruth\n";
 
             for (int l = 0; l < numClasses; ++l)
             {
@@ -246,7 +246,7 @@ namespace MultiBoost {
                 }
 
                 // class
-                cout << setw(colSize) << "           " << nor_utils::getAlphanumeric(l);
+                cout << setw(colSize) << "                " << nor_utils::getAlphanumeric(l);
 
                 for (int j = 0; j < numClasses; ++j)
                     cout << setw(colSize) << winnerCount[j];
